@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% block content %}
+<div class="safe"><b>🔒 Encryption & authentication.</b> Nodes push alerts over <b>AES-256-GCM</b> end-to-end encryption with <b>time-bound, single-use HMAC tokens</b> (captured tokens can't be replayed). Turn on <b>HTTPS</b> for the dashboard too: <code>python scripts/gen_cert.py</code> then start with <code>CS_HTTPS=1</code>. TLS now: <b id="tls">—</b></div>
+<div class="flex-split">
+<div class="card" style="flex:1"><h3><i data-lucide="plus-circle"></i> Register a Node</h3>
+  <label>Node ID</label><input id="nid" placeholder="cam01">
+  <label>Description</label><input id="desc" placeholder="Lobby Pi camera">
+  <button class="btn primary" id="reg" style="margin-top:12px"><i data-lucide="key"></i> Register & generate key</button>
+  <div id="keyout" style="margin-top:10px"></div>
+  <div class="alert warn" style="margin-top:10px">The master key is shown <b>once</b>. Copy it into the node immediately. The server stores it to verify tokens and decrypt payloads.</div>
+</div>
+<div class="card" style="flex:1.3"><h3><i data-lucide="server"></i> Registered Nodes</h3>
+  <div class="scroll"><table><thead><tr><th>Node</th><th>Status</th><th>Last seen</th><th>Payloads</th><th></th></tr></thead>
+  <tbody id="nodes"></tbody></table></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="inbox"></i> Decrypted Alerts <span class="tag" id="forn">all nodes</span></h3>
+ <div class="scroll"><table><thead><tr><th>Time</th><th>Node</th><th>Category</th><th>Summary</th><th>From IP</th></tr></thead><tbody id="pl"></tbody></table></div></div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="terminal"></i> How a node sends encrypted data</h3>
+<pre class="log"># on the camera / laptop node (needs only scripts/camera_node.py + crypto_node.py + requests):
+python scripts/camera_node.py --server https://&lt;pi-ip&gt;:8000 \
+    --node cam01 --key &lt;master_key&gt; --event frozen_feed --severity high --insecure</pre></div>
+{% endblock %}{% block script %}<script>
+let sel=null;
+$('#reg').onclick=async()=>{const nid=$('#nid').value.trim();if(!nid){toast('node id required','err');return;}
+ const r=await apiPost('/api/nodes/register',{node_id:nid,description:$('#desc').value});
+ if(!r.ok){toast(r.error,'err');return;}
+ $('#keyout').innerHTML=`<div class="alert ok">Node <b>${r.node_id}</b> registered. Master key (copy now, shown once):<br><code style="word-break:break-all;color:#9fe">${r.master_key}</code></div>`;
+ $('#nid').value='';$('#desc').value='';load();}
+async function load(){const r=await api('/api/nodes');$('#tls').textContent=r.https?'HTTPS ON':'HTTP (not encrypted)';
+ const tb=$('#nodes');tb.innerHTML='';if(!r.nodes.length){tb.innerHTML='<tr><td colspan=5 class="empty">No nodes yet</td></tr>';}
+ r.nodes.forEach(n=>{const st=n.status=='active'?'<span class="badge b-normal">active</span>':'<span class="badge b-abn">revoked</span>';
+  tb.appendChild(el('tr',null,`<td><b>${n.node_id}</b><br><small class="muted">${n.description||''}</small></td><td>${st}</td><td>${n.last_seen?fmtTime(n.last_seen):'never'}</td><td>${n.payload_count||0}</td>
+  <td class="row"><button class="btn ghost" onclick="view('${n.node_id}')"><i data-lucide="eye"></i></button>${n.status=='active'?`<button class="btn danger" onclick="rev('${n.node_id}')">revoke</button>`:''}</td>`));});lucide.createIcons();loadPayloads();}
+async function rev(id){if(!confirm('Revoke '+id+'? It can no longer send.'))return;await apiPost('/api/nodes/'+id+'/revoke',{});load();}
+function view(id){sel=id;$('#forn').textContent=id;loadPayloads();}
+async function loadPayloads(){const tb=$('#pl');
+ if(sel){const r=await api('/api/nodes/'+sel+'/payloads');tb.innerHTML='';
+  if(!r.payloads.length){tb.innerHTML='<tr><td colspan=5 class="empty">No alerts from '+sel+'</td></tr>';return;}
+  r.payloads.forEach(p=>tb.appendChild(el('tr',null,`<td>${fmtTime(p.event_time)}</td><td>${sel}</td><td>${p.category}</td><td>${p.decrypted_summary}</td><td>${p.src_ip||''}</td>`)));
+ }else{const e=await api('/api/security-events?source=node');tb.innerHTML='';
+  if(!e.events||!e.events.length){tb.innerHTML='<tr><td colspan=5 class="empty">No decrypted alerts yet. Register a node and run camera_node.py.</td></tr>';return;}
+  e.events.forEach(p=>tb.appendChild(el('tr',null,`<td>${fmtTime(p.event_time)}</td><td>${p.session_id||''}</td><td>${p.category}</td><td>${sev(p.severity)}</td><td>${p.source_ip||''}</td>`)));}}
+load();setInterval(load,8000);
+</script>{% endblock %}

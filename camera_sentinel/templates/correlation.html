@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="network"></i> Threat Correlation</h3>
+<p class="muted">Groups IDS detections and Cowrie events by matching source IP within a time window. Correlation is not causation — NAT/shared IPs can mislead, so "same attacker" is never asserted as fact.</p>
+<div class="row"><label style="margin:0">Time window (s)</label><input id="win" type="number" value="300" style="width:120px"><button class="btn" onclick="load()"><i data-lucide="refresh-cw"></i> Correlate</button></div>
+<div class="grid g3" style="margin-top:12px">
+ <div class="card stat"><span class="num" id="nids">—</span><span class="lbl">IDS events</span></div>
+ <div class="card stat"><span class="num amber" id="ncow">—</span><span class="lbl">Cowrie events</span></div>
+ <div class="card stat"><span class="num teal" id="nm">—</span><span class="lbl">matched pairs</span></div></div>
+<div class="scroll" style="margin-top:12px"><table><thead><tr><th>IP</th><th>IDS category</th><th>IDS time</th><th>Cowrie event</th><th>Cowrie time</th><th>Δt (s)</th></tr></thead>
+<tbody id="m"></tbody></table></div></div>
+{% endblock %}{% block script %}<script>
+async function load(){const r=await api('/api/correlation?window='+(win.value||300));
+ nids.textContent=r.ids_count;ncow.textContent=r.cowrie_count;nm.textContent=r.matched.length;
+ const tb=$('#m');tb.innerHTML='';if(!r.matched.length){tb.innerHTML='<tr><td colspan=6 class="empty">No IP+time matches in window. Unmatched evidence stays separate.</td></tr>';return;}
+ r.matched.forEach(x=>tb.appendChild(el('tr',null,`<td><b>${x.ip}</b></td><td>${x.ids.category}</td><td>${fmtTime(x.ids.event_time)}</td><td>${x.cowrie.eventid}</td><td>${fmtTime(x.cowrie.event_time)}</td><td>${x.dt}</td>`)));}
+load();
+</script>{% endblock %}

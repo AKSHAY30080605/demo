@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block content %}
+<div class="grid g4">
+  <div class="card stat"><span class="num teal" id="s_flows">—</span><span class="lbl">Flows stored</span></div>
+  <div class="card stat"><span class="num red" id="s_abn">—</span><span class="lbl">Abnormal detections</span></div>
+  <div class="card stat"><span class="num" id="s_sess">—</span><span class="lbl">Collection sessions</span></div>
+  <div class="card stat"><span class="num amber" id="s_cow">—</span><span class="lbl">Cowrie events</span></div>
+</div>
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><h3><i data-lucide="activity"></i> System Health</h3>
+    <div class="kv"><span>CPU</span><b id="h_cpu">—</b></div>
+    <div class="kv"><span>RAM</span><b id="h_ram">—</b></div>
+    <div class="kv"><span>Disk</span><b id="h_disk">—</b></div>
+    <div class="kv"><span>CPU temp</span><b id="h_temp">—</b></div>
+    <div class="kv"><span>Active model</span><b id="h_model">—</b></div>
+  </div>
+  <div class="card"><h3><i data-lucide="shield"></i> Honeypot</h3>
+    <div class="kv"><span>Status</span><b id="h_cowstat">—</b></div>
+    <div class="kv"><span>SSH decoy port</span><b>{{ cfg.COWRIE_SSH_PORT }}</b></div>
+    <div class="kv"><span>Log file present</span><b id="h_cowlog">—</b></div>
+    <p class="muted" style="margin-top:10px">Cowrie runs as a separate isolated service on this Pi. Honeypot contact ≠ camera compromise.</p>
+  </div>
+  <div class="card"><h3><i data-lucide="database"></i> Datasets</h3>
+    <div class="stat"><span class="num" id="h_ds">—</span><span class="lbl">Uploaded datasets</span></div>
+    <a class="btn" href="/page/datasets" style="margin-top:10px"><i data-lucide="upload"></i> Manage datasets</a>
+  </div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="list"></i> Recent Security Events</h3>
+  <div class="scroll"><table><thead><tr><th>Time</th><th>Source</th><th>Category</th><th>Severity</th><th>Source IP</th></tr></thead>
+  <tbody id="recent"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div>
+</div>
+{% endblock %}{% block script %}<script>
+async function load(){const o=await api('/api/overview');if(!o.ok)return;
+ s_flows.textContent=o.flows;s_abn.textContent=o.abnormal;s_sess.textContent=o.sessions;s_cow.textContent=o.cowrie_events;h_ds.textContent=o.datasets;
+ const sy=o.system||{};h_cpu.textContent=(sy.cpu_percent??'—')+'%';h_ram.textContent=(sy.ram_percent??'—')+'%';h_disk.textContent=(sy.disk_percent??'—')+'%';h_temp.textContent=sy.temp_c?sy.temp_c+'°C':'—';h_model.textContent=o.active_model||'none';
+ const cw=o.cowrie||{};h_cowstat.innerHTML=cw.running?'<span class="good">running</span>':'<span class="err">stopped</span>';h_cowlog.textContent=cw.log_exists?'yes':'no';
+ const tb=$('#recent');tb.innerHTML='';if(!o.recent_events.length){tb.innerHTML='<tr><td colspan=5 class="empty">No events yet</td></tr>';}
+ o.recent_events.forEach(e=>{tb.appendChild(el('tr',null,`<td>${fmtTime(e.event_time)}</td><td>${e.event_source}</td><td>${e.category||'-'}</td><td>${sev(e.severity)}</td><td>${e.source_ip||'-'}</td>`));});
+ lucide.createIcons();}
+load();setInterval(load,6000);
+</script>{% endblock %}

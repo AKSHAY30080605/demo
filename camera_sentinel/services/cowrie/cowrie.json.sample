@@ -1,0 +1,4 @@
+{"eventid":"cowrie.session.connect","timestamp":"2026-11-11T05:20:01.000000Z","src_ip":"192.168.0.55","src_port":44122,"session":"a1b2c3","protocol":"ssh"}
+{"eventid":"cowrie.login.failed","timestamp":"2026-11-11T05:20:03.000000Z","src_ip":"192.168.0.55","username":"root","password":"123456","session":"a1b2c3","protocol":"ssh"}
+{"eventid":"cowrie.login.failed","timestamp":"2026-11-11T05:20:04.000000Z","src_ip":"192.168.0.55","username":"admin","password":"admin","session":"a1b2c3","protocol":"ssh"}
+{"eventid":"cowrie.command.input","timestamp":"2026-11-11T05:20:09.000000Z","src_ip":"192.168.0.55","input":"uname -a; cat /etc/passwd","session":"a1b2c3","protocol":"ssh"}

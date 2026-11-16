@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="bar-chart-3"></i> Models <span class="tag">activate one for live detection</span></h3>
+<p class="muted">Accuracy is never shown alone. Class counts and split method appear with every model. Small or single-class test sets are flagged.</p>
+<div class="scroll"><table><thead><tr><th>Version</th><th>Target</th><th>Split</th><th>Acc</th><th>Prec</th><th>Rec</th><th>F1</th><th>ROC-AUC</th><th>Test</th><th></th></tr></thead>
+<tbody id="rows"></tbody></table></div></div>
+<div class="card" id="detail" style="margin-top:16px;display:none"></div>
+{% endblock %}{% block script %}<script>
+async function load(){const r=await api('/api/models');const tb=$('#rows');tb.innerHTML='';
+ if(!r.models.length){tb.innerHTML='<tr><td colspan=10 class="empty">No models yet — train one.</td></tr>';return;}
+ r.models.forEach(m=>{const x=m.metrics;const tr=el('tr',null,`<td>${m.version} ${m.active?'<span class="badge b-normal">active</span>':''}</td>
+  <td>${m.target}</td><td>${x.split_method}</td><td>${(x.accuracy*100).toFixed(1)}%</td><td>${(x.precision*100).toFixed(1)}%</td>
+  <td>${(x.recall*100).toFixed(1)}%</td><td>${(x.f1*100).toFixed(1)}%</td><td>${x.roc_auc?(x.roc_auc).toFixed(3):'—'}</td>
+  <td>${x.test_rows}</td><td>${m.active?'':`<button class="btn primary" onclick="act(${m.id})">Activate</button>`} <button class="btn ghost" onclick='det(${JSON.stringify(m).replace(/'/g,"&#39;")})'><i data-lucide="eye"></i></button></td>`);tb.appendChild(tr);});lucide.createIcons();}
+async function act(id){await apiPost('/api/models/'+id+'/activate',{});toast('model activated');load();}
+function det(m){const x=m.metrics;const cm=x.confusion_matrix||[[0,0],[0,0]];
+ $('#detail').style.display='block';
+ $('#detail').innerHTML=`<h3><i data-lucide="grid"></i> ${m.version} — details</h3>
+ <div class="flex-split"><div><h3>Confusion matrix</h3><div class="cm">
+   <div style="background:#0f2a1c">${cm[0]?cm[0][0]:0}<br><small>TN</small></div><div style="background:#2a2112">${cm[0]?cm[0][1]:0}<br><small>FP</small></div>
+   <div style="background:#2a1a12">${cm[1]?cm[1][0]:0}<br><small>FN</small></div><div style="background:#0f2a2a">${cm[1]?cm[1][1]:0}<br><small>TP</small></div></div>
+   <p class="muted" style="margin-top:8px">FPR: ${x.false_positive_rate??'—'} · PR-AUC: ${x.pr_auc??'—'}</p></div>
+ <div style="flex:1"><h3>Provenance</h3><div class="kv"><span>Threshold</span><b>${m.threshold}</b></div>
+   <div class="kv"><span>Train rows</span><b>${x.train_rows}</b></div><div class="kv"><span>Test rows</span><b>${x.test_rows}</b></div>
+   <div class="kv"><span>Test class counts</span><b>${JSON.stringify(x.test_class_counts)}</b></div>
+   <div class="kv"><span>Split</span><b>${x.split_method}</b></div>
+   ${x.test_rows<30?'<div class="alert warn">Test set &lt;30 rows — metrics unreliable.</div>':''}</div></div>`;lucide.createIcons();
+ $('#detail').scrollIntoView({behavior:'smooth'});}
+load();
+</script>{% endblock %}

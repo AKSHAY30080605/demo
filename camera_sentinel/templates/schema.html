@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="git-branch"></i> Canonical Feature Schema <span class="tag">v1 · derived from IoT-SFC conn records</span></h3>
+<p class="muted">Local camera traffic must map to these features with matching meaning, direction, units and window — not just column names. Missing fields are dropped from both sides, never invented.</p>
+<div id="sch"></div></div>
+<div class="grid g2" style="margin-top:16px">
+<div class="card"><h3><i data-lucide="ban"></i> Excluded (leakage / identifiers)</h3><div id="leak"></div>
+<p class="muted">Ground-truth and post-event fields (attack, type_of_attack, label_source, attacker_role) and identifiers (uid, window_id, ts, IPs) are never model inputs.</p></div>
+<div class="card"><h3><i data-lucide="map"></i> Public → Local mapping</h3>
+<table><thead><tr><th>Canonical</th><th>Public (Zeek)</th><th>Local extractor</th></tr></thead><tbody>
+<tr><td>duration</td><td>conn.duration</td><td>flow end−start (s)</td></tr>
+<tr><td>orig/resp_bytes</td><td>conn.*_bytes</td><td>per-direction payload bytes</td></tr>
+<tr><td>orig/resp_pkts</td><td>conn.*_pkts</td><td>per-direction packet count</td></tr>
+<tr><td>proto/service</td><td>conn.proto/service</td><td>from port/protocol rule</td></tr>
+<tr><td>conn_state</td><td>conn.conn_state</td><td>documented TCP-state equivalent</td></tr>
+</tbody></table></div></div>
+{% endblock %}{% block script %}<script>
+async function load(){const s=await api('/api/schema');
+ let h='<div class="scroll"><table><thead><tr><th>Feature</th><th>Kind</th></tr></thead><tbody>';
+ s.canonical.forEach(f=>{const k=s.numeric.includes(f)?'numeric':(s.categorical.includes(f)?'categorical':'—');h+=`<tr><td>${f}</td><td><span class="badge b-info">${k}</span></td></tr>`;});
+ h+='</tbody></table></div>';$('#sch').innerHTML=h;
+ $('#leak').innerHTML=s.leakage.map(x=>`<span class="badge b-warn" style="margin:3px">${x}</span>`).join('');}
+load();
+</script>{% endblock %}

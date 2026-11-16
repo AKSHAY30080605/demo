@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page_title }} · Camera Sentinel</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">◈</span><div><b>Camera Sentinel</b><small>Secure Camera Analytics</small></div></div>
+    <nav>
+      {% for key,label,icon in pages %}
+      <a href="/page/{{ key }}" class="nav {{ 'active' if active==key }}">
+        <i data-lucide="{{ icon }}"></i><span>{{ label }}</span></a>
+      {% endfor %}
+    </nav>
+    <a href="/logout" class="nav logout"><i data-lucide="log-out"></i><span>Logout</span></a>
+  </aside>
+  <main>
+    <header class="topbar">
+      <div><h1>{{ page_title }}</h1></div>
+      <div class="status" id="topstatus">
+        <span class="chip" id="chip-model">model: —</span>
+        <span class="chip" id="chip-cpu">CPU —</span>
+        <span class="chip" id="chip-ram">RAM —</span>
+        <span class="chip ok" id="chip-cow">Cowrie —</span>
+        <span class="dot" id="livedot"></span>
+      </div>
+    </header>
+    <section class="content">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+<script src="/static/js/app.js"></script>
+{% block script %}{% endblock %}
+<script>lucide.createIcons();</script>
+</body></html>

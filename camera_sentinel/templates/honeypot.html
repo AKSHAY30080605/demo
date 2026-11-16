@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block content %}
+<div class="grid g3">
+ <div class="card"><h3><i data-lucide="heart-pulse"></i> Cowrie Health</h3>
+  <div class="kv"><span>Status</span><b id="cstat">—</b></div>
+  <div class="kv"><span>PID</span><b id="cpid">—</b></div>
+  <div class="kv"><span>SSH port</span><b>{{ cfg.COWRIE_SSH_PORT }}</b></div>
+  <div class="kv"><span>Telnet port</span><b>{{ cfg.COWRIE_TELNET_PORT }}</b></div>
+  <div class="kv"><span>Log present</span><b id="clog">—</b></div>
+  <button class="btn" id="ing" style="margin-top:10px"><i data-lucide="refresh-cw"></i> Ingest latest events</button></div>
+ <div class="card stat"><span class="num amber" id="ctot">—</span><span class="lbl">events ingested</span></div>
+ <div class="card"><h3><i data-lucide="map-pin"></i> Top source IPs</h3><div id="tops"></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="terminal"></i> Cowrie Events <span class="tag">passwords masked</span></h3>
+ <div class="scroll"><table><thead><tr><th>Time</th><th>Event</th><th>Session</th><th>Source IP</th><th>Summary</th></tr></thead><tbody id="ev"></tbody></table></div></div>
+<p class="muted" style="margin-top:8px">Cowrie contact is evidence of interaction with the decoy, not proof the camera was attacked. Sources are shown separately from IDS.</p>
+{% endblock %}{% block script %}<script>
+$('#ing').onclick=async()=>{const r=await apiPost('/api/honeypot/ingest',{});toast('ingested '+r.ingested);load();}
+async function load(){const s=await api('/api/honeypot/status');$('#cstat').innerHTML=s.running?'<span class="good">running</span>':'<span class="err">stopped</span>';
+ $('#cpid').textContent=s.pid||'—';$('#clog').textContent=s.log_exists?'yes':'no';
+ const e=await api('/api/honeypot/events');$('#ctot').textContent=e.events.length;
+ $('#tops').innerHTML=e.top_sources.length?e.top_sources.map(t=>`<div class="kv"><span>${t.src_ip||'?'}</span><b>${t.c}</b></div>`).join(''):'<p class="empty">none</p>';
+ const tb=$('#ev');tb.innerHTML='';if(!e.events.length){tb.innerHTML='<tr><td colspan=5 class="empty">No Cowrie events yet. Start Cowrie and generate a test login.</td></tr>';return;}
+ e.events.forEach(x=>tb.appendChild(el('tr',null,`<td>${fmtTime(x.event_time)}</td><td>${x.eventid}</td><td>${x.session||'-'}</td><td>${x.src_ip||'-'}</td><td>${x.parsed_summary||''}</td>`)));}
+load();setInterval(load,8000);
+</script>{% endblock %}

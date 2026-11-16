@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="file-text"></i> Reports & Analytics</h3>
+<p class="muted">Export evidence and metrics. Demo/synthetic records are always marked; fabricated records are never presented as live captures.</p>
+<div class="grid g4" style="margin-top:12px">
+ <a class="btn" href="/api/reports/export?kind=events"><i data-lucide="download"></i> Security events CSV</a>
+ <a class="btn" href="/api/reports/export?kind=cowrie"><i data-lucide="download"></i> Cowrie events CSV</a>
+ <a class="btn" href="/api/reports/export?kind=models"><i data-lucide="download"></i> Model metrics CSV</a>
+ <a class="btn" href="/api/reports/export?kind=sessions"><i data-lucide="download"></i> Collection sessions CSV</a>
+</div></div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="pie-chart"></i> Summary</h3>
+<div class="grid g4" id="sum"></div></div>
+{% endblock %}{% block script %}<script>
+async function load(){const o=await api('/api/overview');
+ $('#sum').innerHTML=`<div class="card stat"><span class="num teal">${o.flows}</span><span class="lbl">flows</span></div>
+  <div class="card stat"><span class="num red">${o.abnormal}</span><span class="lbl">abnormal</span></div>
+  <div class="card stat"><span class="num">${o.sessions}</span><span class="lbl">sessions</span></div>
+  <div class="card stat"><span class="num amber">${o.cowrie_events}</span><span class="lbl">cowrie events</span></div>`;}
+load();
+</script>{% endblock %}

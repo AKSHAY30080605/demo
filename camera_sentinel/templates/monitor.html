@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block content %}
+<div class="grid g3">
+  <div class="card stat"><span class="num teal" id="m_rate">—</span><span class="lbl">Flows / min (recent)</span></div>
+  <div class="card stat"><span class="num" id="m_total">—</span><span class="lbl">Total flows</span></div>
+  <div class="card"><h3><i data-lucide="radar"></i> Capture Visibility</h3>
+    <p class="muted">Same Wi-Fi does not guarantee the Pi sees other clients' unicast packets. Test first.</p>
+    <button class="btn primary" id="vis-btn"><i data-lucide="search"></i> Run visibility test</button>
+    <div id="vis-out" style="margin-top:10px"></div>
+  </div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="server"></i> Camera / Source Inventory</h3>
+  <table><thead><tr><th>Source</th><th>Type</th><th>Transport</th><th>Notes</th></tr></thead><tbody>
+  <tr><td>Raspberry Pi Camera</td><td>camera</td><td>document actual stream</td><td>record protocol/port used</td></tr>
+  <tr><td>Laptop webcam stream</td><td>camera</td><td>LAN stream client</td><td>webcam alone = no traffic until streamed</td></tr>
+  <tr><td>{{ cfg.CAPTURE_INTERFACE }}</td><td>interface</td><td>pcap/zeek</td><td>capture source</td></tr>
+  </tbody></table>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="line-chart"></i> Recent Flow Timeline <span class="tag">last 50 flows</span></h3>
+  <canvas id="tl" height="120"></canvas>
+  <div id="tl-empty" class="empty">No flows captured yet — start a session in the Collection Studio.</div>
+</div>
+{% endblock %}{% block script %}<script>
+$('#vis-btn').onclick=async()=>{$('#vis-out').innerHTML='<span class="spin"></span> capturing on {{ cfg.CAPTURE_INTERFACE }} (up to 10s)…';
+ const r=await api('/api/monitor/visibility?interface={{ cfg.CAPTURE_INTERFACE }}');
+ let cls='warn',msg=r.reason||'';
+ if(r.visible===true){cls='ok';msg='✓ Capture working — '+r.reason;}
+ else if(r.visible===false){cls='warn';msg='⚠ '+r.reason;}
+ else {cls='err';msg='✗ '+r.reason;}
+ $('#vis-out').innerHTML='<div class="alert '+cls+'">'+msg+'</div>';};
+async function load(){const o=await api('/api/overview');if(!o.ok)return;m_total.textContent=o.flows;
+ const d=await api('/api/detections');const tl=$('#tl');const rows=(d.detections||[]).slice(0,50).reverse();
+ if(!rows.length){$('#tl-empty').style.display='block';tl.style.display='none';return;}
+ $('#tl-empty').style.display='none';tl.style.display='block';
+ const ctx=tl.getContext('2d');const W=tl.width=tl.offsetWidth;const H=tl.height;ctx.clearRect(0,0,W,H);
+ const step=W/Math.max(rows.length-1,1);ctx.beginPath();ctx.strokeStyle='#17d6c0';ctx.lineWidth=2;
+ rows.forEach((r,i)=>{const y=H-(r.abnormal_score||0)*H;i?ctx.lineTo(i*step,y):ctx.moveTo(0,y);});ctx.stroke();
+ m_rate.textContent=rows.length;}
+load();setInterval(load,6000);
+</script>{% endblock %}

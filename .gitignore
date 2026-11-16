@@ -21,8 +21,8 @@ atm_trustfusion_ai/static/recovered_footage.mp4
 atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/*.mp4
 !atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/empty_atm_loop.mp4
 
-# Nested Git repositories
-camera_sentinel/cowrie/.git/
+# Nested Git repositories and third-party clones
+camera_sentinel/cowrie/
 
 # OS and IDE files
 .DS_Store

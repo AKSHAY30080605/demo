@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="list"></i> Security Events <span class="tag">IDS · Cowrie · system · simulation</span></h3>
+<div class="row"><select id="src" style="width:auto"><option value="">All sources</option><option>ids</option><option>cowrie</option><option>simulation</option><option>system</option></select>
+<select id="sev" style="width:auto"><option value="">All severities</option><option>critical</option><option>high</option><option>medium</option><option>low</option></select>
+<button class="btn" onclick="load()"><i data-lucide="filter"></i> Filter</button></div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Time</th><th>Source</th><th>Category</th><th>Severity</th><th>Src IP</th><th>Dst IP</th><th>Score</th><th>Ack</th></tr></thead>
+<tbody id="ev"></tbody></table></div></div>
+{% endblock %}{% block script %}<script>
+async function load(){const q=new URLSearchParams();if(src.value)q.set('source',src.value);if(sev.value)q.set('severity',sev.value);
+ const r=await api('/api/security-events?'+q);const tb=$('#ev');tb.innerHTML='';
+ if(!r.events.length){tb.innerHTML='<tr><td colspan=8 class="empty">No events</td></tr>';return;}
+ r.events.forEach(e=>{const tr=el('tr',null,`<td>${fmtTime(e.event_time)}</td><td><span class="badge b-info">${e.event_source}</span></td><td>${e.category||'-'}</td><td>${sev(e.severity)}</td><td>${e.source_ip||'-'}</td><td>${e.destination_ip||'-'}</td><td>${e.model_score?e.model_score.toFixed(2):'-'}</td><td>${e.acknowledged?'<span class="good">✓</span>':`<button class="btn ghost" onclick="ack(${e.id})">ack</button>`}</td>`);tb.appendChild(tr);});lucide.createIcons();}
+async function ack(id){await apiPost('/api/security-events/'+id+'/ack',{});load();}
+load();setInterval(load,8000);
+</script>{% endblock %}

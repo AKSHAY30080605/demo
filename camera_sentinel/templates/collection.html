@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% block content %}
+<div class="flex-split">
+  <div class="card" style="flex:1">
+    <h3><i data-lucide="download-cloud"></i> Start Collection Session</h3>
+    <label>Source device</label>
+    <select id="device"><option>pi-camera</option><option>laptop-stream</option><option>interface</option></select>
+    <label>Capture interface</label><input id="iface" value="{{ cfg.CAPTURE_INTERFACE }}">
+    <label>Scenario</label>
+    <select id="scenario">
+      <option value="camera_idle">Camera idle</option>
+      <option value="camera_stream">Normal camera stream</option>
+      <option value="normal_control">Normal browsing / control</option>
+      <option value="port_scan_lab">Authorised port-scan lab</option>
+      <option value="decoy_login">Decoy login attempts (Cowrie)</option>
+      <option value="conn_burst">Controlled connection burst</option>
+      <option value="arp_lab">Isolated ARP anomaly lab</option>
+    </select>
+    <label>Label (ground truth)</label>
+    <select id="label"><option>Normal</option><option>Abnormal</option><option>Unlabelled</option></select>
+    <label>Duration</label>
+    <select id="dur"><option value="30">30 sec</option><option value="60" selected>1 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
+    <label>Session notes / authorised target</label><textarea id="notes" rows="2" placeholder="operator, test plan id, authorised target"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="start"><i data-lucide="play"></i> Start</button>
+      <button class="btn danger" id="stop" disabled><i data-lucide="square"></i> Stop</button>
+      <span id="live"></span>
+    </div>
+    <div class="alert warn" style="margin-top:10px">If capture tools aren't present, flows are stored as <b>demo</b> (clearly marked, never shown as live traffic).</div>
+  </div>
+  <div class="card" style="flex:1.3">
+    <h3><i data-lucide="history"></i> Collection History</h3>
+    <div class="scroll"><table><thead><tr><th>ID</th><th>Scenario</th><th>Label</th><th>Flows</th><th>Status</th><th></th></tr></thead>
+    <tbody id="hist"></tbody></table></div>
+  </div>
+</div>
+{% endblock %}{% block script %}<script>
+let cur=null,timer=null;
+$('#start').onclick=async()=>{
+ const b={device:device.value,interface:iface.value,scenario:scenario.value,label:label.value,duration:+dur.value,notes:notes.value,label_source:'manual'};
+ const r=await apiPost('/api/collections/start',b);if(!r.ok){toast(r.error,'err');return;}
+ cur=r.session_id;$('#start').disabled=true;$('#stop').disabled=false;
+ let left=r.duration;$('#live').innerHTML='<span class="spin"></span> capturing… '+left+'s';
+ timer=setInterval(()=>{left--;$('#live').innerHTML='<span class="spin"></span> capturing… '+left+'s';if(left<=0){finish();}},1000);
+ load();}
+$('#stop').onclick=finish;
+async function finish(){if(!cur)return;clearInterval(timer);const r=await apiPost('/api/collections/'+cur+'/stop',{});
+ $('#start').disabled=false;$('#stop').disabled=true;$('#live').innerHTML='<span class="good">saved '+(r.flows||0)+' flows</span>';cur=null;load();}
+async function load(){const r=await api('/api/collections');const tb=$('#hist');tb.innerHTML='';
+ if(!r.sessions.length){tb.innerHTML='<tr><td colspan=6 class="empty">No sessions yet</td></tr>';return;}
+ r.sessions.forEach(s=>{tb.appendChild(el('tr',null,`<td>${s.id}</td><td>${s.scenario}</td><td>${lbl(s.label=='Abnormal'?1:0)}</td><td>${s.flow_count||0}</td><td>${s.status}</td><td><a class="btn ghost" href="/api/collections/${s.id}/export"><i data-lucide="download"></i></a></td>`));});lucide.createIcons();}
+load();
+</script>{% endblock %}

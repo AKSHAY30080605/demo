@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% block content %}
+<div class="safe"><b>⚠ Safety policy.</b> This lab generates <b>bounded</b> test traffic only against <b>allowlisted local/private</b> targets, with hard duration and rate caps. Public IPs, broadcast/multicast and the camera's production IP are blocked. Not a general attack tool.</div>
+<div class="alert ok" style="margin-bottom:14px"><b>Closed-loop test:</b> pick <b>Cowrie decoy login attempts</b> with target <code>127.0.0.1:{{ cfg.COWRIE_SSH_PORT }}</code> — it makes real login attempts against <b>your own</b> honeypot using throwaway test credentials. Cowrie records each attempt, and the decrypted log details appear on the <a href="/page/honeypot">Honeypot Monitoring</a> page.</div>
+<div class="flex-split">
+<div class="card" style="flex:1"><h3><i data-lucide="flask-conical"></i> New Simulation</h3>
+  <label>Scenario</label>
+  <select id="scn"><option value="port_scan">Port scan (constrained, local lab target)</option>
+   <option value="cowrie_login">Cowrie decoy login attempts</option>
+   <option value="conn_burst">Connection burst (local dummy endpoint)</option>
+   <option value="pcap_replay">PCAP replay (offline, marked)</option></select>
+  <label>Authorised local target <span class="muted">(allowlist only)</span></label>
+  <select id="target"></select>
+  <div class="grid g2"><div><label>Duration (max <span id="maxd"></span>s)</label><input id="dur" type="number" value="10"></div>
+   <div><label>Rate /s (max <span id="maxr"></span>)</label><input id="rate" type="number" value="5"></div></div>
+  <label class="row" style="margin-top:10px"><input type="checkbox" id="auth" style="width:auto"> I confirm I own / am authorised to test this local target</label>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="start"><i data-lucide="play"></i> Start</button>
+   <button class="btn danger" id="stop" disabled><i data-lucide="octagon"></i> Emergency stop</button><span id="live"></span></div>
+</div>
+<div class="card" style="flex:1.2"><h3><i data-lucide="history"></i> Simulation Runs</h3>
+ <div class="scroll"><table><thead><tr><th>ID</th><th>Scenario</th><th>Target</th><th>Status</th><th>Events</th></tr></thead><tbody id="runs"></tbody></table></div></div>
+</div>
+{% endblock %}{% block script %}<script>
+let cur=null;
+async function init(){const r=await api('/api/simulations');const t=$('#target');t.innerHTML='';
+ r.allowlist.forEach(a=>t.appendChild(el('option',null,a)));$('#maxd').textContent=r.max_duration;$('#maxr').textContent=r.max_rate;rows(r.runs);}
+$('#start').onclick=async()=>{if(!$('#auth').checked){toast('confirm authorisation first','err');return;}
+ const b={scenario:scn.value,target:target.value,duration:+dur.value,rate:+rate.value,authorized:true};
+ const r=await apiPost('/api/simulations/start',b);if(!r.ok){toast(r.error,'err');return;}
+ cur=r.run_id;$('#stop').disabled=false;$('#start').disabled=true;$('#live').innerHTML='<span class="spin"></span> running '+r.duration+'s';
+ setTimeout(()=>{$('#stop').disabled=true;$('#start').disabled=false;
+  let msg='<span class="good">finished</span>';
+  if(scn.value=='cowrie_login')msg+=' — <a href="/page/honeypot">view honeypot logs →</a>';
+  $('#live').innerHTML=msg;init();},(r.duration+1)*1000);init();}
+$('#stop').onclick=async()=>{if(!cur)return;await apiPost('/api/simulations/'+cur+'/stop',{});$('#stop').disabled=true;$('#start').disabled=false;$('#live').innerHTML='<span class="err">stopped</span>';cur=null;init();}
+function rows(rs){const tb=$('#runs');tb.innerHTML='';if(!rs.length){tb.innerHTML='<tr><td colspan=5 class="empty">No runs</td></tr>';return;}
+ rs.forEach(r=>tb.appendChild(el('tr',null,`<td>${r.id}</td><td>${r.scenario}</td><td>${r.target}</td><td>${r.status}</td><td>${r.event_count||0}</td>`)));}
+init();
+</script>{% endblock %}

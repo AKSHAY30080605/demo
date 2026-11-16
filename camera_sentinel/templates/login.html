@@ -1,0 +1,13 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Camera Sentinel · {{ 'Setup' if setup else 'Login' }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/css/app.css"></head>
+<body class="centered">
+<form class="card login" method="post" action="{{ '/setup' if setup else '/login' }}">
+  <div class="brand big"><span class="logo">◈</span><b>Camera Sentinel</b></div>
+  <p class="muted">{{ 'First run: create an admin password (min 8 chars).' if setup else 'Enter admin password to continue.' }}</p>
+  {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+  <input type="password" name="password" placeholder="Password" autofocus required>
+  <button class="btn primary" type="submit">{{ 'Create & Enter' if setup else 'Login' }}</button>
+  <small class="muted">Local LAN access only. Do not expose to the public Internet.</small>
+</form></body></html>

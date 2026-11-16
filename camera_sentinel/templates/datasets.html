@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="upload"></i> Upload Dataset <span class="tag">CSV / TSV / JSON / Parquet / XLSX</span></h3>
+  <div class="row">
+    <input type="file" id="file" style="flex:1" accept=".csv,.tsv,.json,.parquet,.xlsx,.xls">
+    <button class="btn primary" id="up"><i data-lucide="upload"></i> Upload & Inspect</button>
+  </div>
+  <div id="up-out" style="margin-top:10px"></div>
+  <div class="alert warn" style="margin-top:10px">Full IoT-SFC v2 CSV is 12.63 GB (42M rows). On a 4 GB Pi, first build a subset:
+   <code>python scripts/prepare_dataset.py iot_dataset_v7.csv --out data/collected/subset.csv --per-class 60000</code>, then upload the subset here.</div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="layers"></i> Build Dataset from Collected Flows</h3>
+  <p class="muted">Collect Normal and Abnormal sessions in the Traffic Collection Studio, then click here to turn all labelled flows into one trainable dataset — no export/re-upload needed. It appears below and in Model Training.</p>
+  <button class="btn primary" id="fromcol"><i data-lucide="database-zap"></i> Build from collected sessions</button>
+  <div id="fc-out" style="margin-top:10px"></div>
+</div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="database"></i> Datasets</h3>
+  <table><thead><tr><th>ID</th><th>Name</th><th>Source</th><th>Rows</th><th>Cols</th><th>Added</th><th></th></tr></thead>
+  <tbody id="ds"></tbody></table>
+</div>
+<div class="card" id="rep" style="margin-top:16px;display:none"><h3><i data-lucide="file-search"></i> Inspection Report</h3><div id="rep-body"></div></div>
+{% endblock %}{% block script %}<script>
+$('#up').onclick=async()=>{const f=$('#file').files[0];if(!f){toast('choose a file','err');return;}
+ $('#up-out').innerHTML='<span class="spin"></span> uploading & inspecting…';
+ const fd=new FormData();fd.append('file',f);
+ const r=await fetch('/api/datasets/upload',{method:'POST',body:fd}).then(x=>x.json());
+ if(!r.ok){$('#up-out').innerHTML='<div class="alert err">'+r.error+'</div>';return;}
+ $('#up-out').innerHTML='<div class="alert ok">Uploaded. Dataset #'+r.dataset_id+'</div>';load();showReport(r.report);}
+function showReport(rp){$('#rep').style.display='block';
+ let cls='';for(const[k,v]of Object.entries(rp.class_distribution||{})){cls+=`<div class="kv"><span>${k}</span><b>${JSON.stringify(v)}</b></div>`;}
+ let cols='<div class="scroll"><table><thead><tr><th>Column</th><th>Type</th><th>Missing%</th><th>Unique</th><th>Const</th></tr></thead><tbody>';
+ rp.column_detail.forEach(c=>{cols+=`<tr><td>${c.name}</td><td>${c.dtype}</td><td>${c.missing_pct}</td><td>${c.unique}</td><td>${c.constant?'●':''}</td></tr>`;});cols+='</tbody></table></div>';
+ $('#rep-body').innerHTML=`<div class="grid g4"><div class="card stat"><span class="num teal">${rp.rows_inspected.toLocaleString()}</span><span class="lbl">rows inspected</span></div>
+  <div class="card stat"><span class="num">${rp.columns}</span><span class="lbl">columns</span></div>
+  <div class="card stat"><span class="num amber">${rp.duplicate_rows}</span><span class="lbl">duplicate rows</span></div>
+  <div class="card stat"><span class="num">${rp.format}</span><span class="lbl">format ${rp.delimiter?('· '+JSON.stringify(rp.delimiter)):''}</span></div></div>
+  <div class="grid g2" style="margin-top:12px"><div class="card"><h3>Label candidates & class distribution</h3>${rp.label_candidates.join(', ')||'none'}${cls}</div>
+  <div class="card"><h3>Record families (log_type)</h3><pre class="log">${JSON.stringify(rp.record_families,null,1)}</pre>
+  <h3 style="margin-top:10px">Constant columns (${rp.constant_columns.length})</h3><p class="muted">${rp.constant_columns.join(', ')}</p></div></div>
+  <div class="card" style="margin-top:12px"><h3>Columns</h3>${cols}</div>`;
+ $('#rep').scrollIntoView({behavior:'smooth'});}
+async function load(){const r=await api('/api/datasets');const tb=$('#ds');tb.innerHTML='';
+ if(!r.datasets.length){tb.innerHTML='<tr><td colspan=7 class="empty">No datasets. Upload one above.</td></tr>';return;}
+ r.datasets.forEach(d=>{const tr=el('tr',null,`<td>${d.id}</td><td>${d.name}</td><td><span class="badge b-info">${d.source||d.format}</span></td><td>${(d.rows||0).toLocaleString()}</td><td>${d.columns}</td><td>${fmtTime(d.created_at)}</td>
+  <td class="row"><button class="btn ghost" onclick="insp(${d.id})"><i data-lucide="eye"></i></button><button class="btn danger" onclick="del(${d.id})"><i data-lucide="trash-2"></i></button></td>`);tb.appendChild(tr);});lucide.createIcons();}
+async function insp(id){const r=await api('/api/datasets/'+id+'/inspect');if(r.ok)showReport(r.report);}
+async function del(id){if(!confirm('Delete dataset #'+id+'? This removes the uploaded file.'))return;await apiPost('/api/datasets/'+id+'/delete',{});load();}
+$('#fromcol').onclick=async()=>{$('#fc-out').innerHTML='<span class="spin"></span> building…';
+ const r=await apiPost('/api/datasets/from_collected',{});
+ if(!r.ok){$('#fc-out').innerHTML='<div class="alert err">'+r.error+'</div>';return;}
+ let msg=`<div class="alert ok">Built dataset #${r.dataset_id} — ${r.rows} flows (normal ${r.normal}, abnormal ${r.abnormal}). Now go to Model Training and pick it.</div>`;
+ if(r.warning)msg+=`<div class="alert warn">${r.warning}</div>`;
+ $('#fc-out').innerHTML=msg;load();}
+load();
+</script>{% endblock %}

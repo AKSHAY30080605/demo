@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="tags"></i> Session Labelling <span class="tag">audit history kept</span></h3>
+<p class="muted">A session label is not automatic proof every flow matches. Mixed sessions should be split/reviewed. Original labels are never silently overwritten.</p>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Scenario</th><th>Current label</th><th>Source</th><th>Flows</th><th>Set label</th></tr></thead>
+<tbody id="rows"></tbody></table></div></div>
+{% endblock %}{% block script %}<script>
+async function load(){const r=await api('/api/collections');const tb=$('#rows');tb.innerHTML='';
+ if(!r.sessions.length){tb.innerHTML='<tr><td colspan=6 class="empty">No sessions to label</td></tr>';return;}
+ r.sessions.forEach(s=>{const tr=el('tr',null,`<td>${s.id}</td><td>${s.scenario}</td><td>${s.label}</td><td>${s.label_source||'-'}</td><td>${s.flow_count||0}</td>
+  <td class="row"><select id="l${s.id}"><option>Normal</option><option>Abnormal</option><option>Unlabelled</option></select>
+  <button class="btn" onclick="setl(${s.id})"><i data-lucide="check"></i></button></td>`);tb.appendChild(tr);});lucide.createIcons();}
+async function setl(id){const v=$('#l'+id).value;const r=await apiPost('/api/labels',{session_id:id,label:v,label_source:'analyst_review'});
+ if(r.ok){toast('relabelled #'+id+' → '+v);load();}else toast(r.error,'err');}
+load();
+</script>{% endblock %}

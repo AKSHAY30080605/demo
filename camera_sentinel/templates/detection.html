@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block content %}
+<div class="card"><h3><i data-lucide="scan-eye"></i> Live AI Detection</h3>
+<div id="nomodel" class="alert warn" style="display:none">Model not trained/deployed. Train and activate a model first — no fake risk scores are shown.</div>
+<div class="row"><button class="btn primary" id="run"><i data-lucide="play"></i> Score recent flows</button>
+<span class="muted">Active model: <b id="mv">—</b> · threshold applied from validation</span></div>
+<div id="out" style="margin-top:10px"></div></div>
+<div class="card" style="margin-top:16px"><h3><i data-lucide="activity"></i> Recent Predictions</h3>
+<div class="scroll"><table><thead><tr><th>Time</th><th>Flow</th><th>Model</th><th>Prediction</th><th>Abnormal score</th><th>Threshold</th></tr></thead>
+<tbody id="rows"></tbody></table></div></div>
+{% endblock %}{% block script %}<script>
+$('#run').onclick=async()=>{$('#out').innerHTML='<span class="spin"></span> scoring…';
+ const r=await apiPost('/api/detect/run',{});
+ if(!r.ok){$('#out').innerHTML='<div class="alert err">'+r.error+'</div>';if(r.error.includes('Model'))$('#nomodel').style.display='block';return;}
+ const res=r.result;const n=res.multiclass?res.labels.length:res.predicted.length;const ab=res.multiclass?res.labels.filter(x=>x!='normal').length:res.predicted.filter(x=>x==1).length;
+ $('#out').innerHTML=`<div class="alert ok">Scored ${n} flows · ${ab} flagged abnormal</div>`;load();}
+async function load(){const r=await api('/api/detections');$('#mv').textContent=r.active_model||'none';
+ if(!r.active_model)$('#nomodel').style.display='block';
+ const tb=$('#rows');tb.innerHTML='';if(!r.detections.length){tb.innerHTML='<tr><td colspan=6 class="empty">No predictions yet</td></tr>';return;}
+ r.detections.forEach(d=>{tb.appendChild(el('tr',null,`<td>${fmtTime(d.event_time)}</td><td>${d.flow_ref}</td><td>${d.model_version}</td><td>${lbl(d.predicted_label)}</td><td>${(d.abnormal_score||0).toFixed(3)}</td><td>${d.threshold}</td>`));});}
+load();setInterval(load,7000);
+</script>{% endblock %}
