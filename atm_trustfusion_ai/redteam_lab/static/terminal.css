@@ -1,0 +1,266 @@
+:root {
+  --term-bg: #070a12;
+  --term-window: #0c101c;
+  --border: #1e293b;
+  --text-main: #e2e8f0;
+  --text-dim: #94a3b8;
+  --green: #10b981;
+  --cyan: #38bdf8;
+  --amber: #f59e0b;
+  --red: #f43f5e;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+body {
+  background-color: var(--term-bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ================= HEADER ================= */
+.term-header {
+  background: #0f172a;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.term-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.term-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+.term-title {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.term-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-top {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-top:hover {
+  background: #334155;
+  color: #fff;
+}
+
+/* ================= MAIN LAYOUT ================= */
+.term-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.term-window {
+  flex: 1;
+  background: var(--term-window);
+  padding: 18px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  cursor: text;
+}
+
+.term-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.term-banner {
+  color: var(--green);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.cmd-highlight {
+  color: var(--amber);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-cmd {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.log-success { color: var(--green); }
+.log-info { color: var(--cyan); }
+.log-warn { color: var(--amber); }
+.log-danger { color: var(--red); font-weight: 700; }
+
+.term-prompt-line {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.term-prompt {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+#termInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  caret-color: var(--green);
+}
+
+/* ================= SIDEBAR MANUAL ================= */
+.guide-sidebar {
+  width: 360px;
+  background: #090e17;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.guide-sidebar.collapsed {
+  margin-right: -360px;
+}
+
+.guide-header {
+  padding: 14px 18px;
+  background: #0f172a;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.guide-header h3 {
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  letter-spacing: 0.04em;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.guide-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guide-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.step-card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-num {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+}
+
+.step-desc {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.step-card code {
+  background: #030712;
+  border: 1px solid #374151;
+  color: var(--cyan);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.step-card code:hover {
+  border-color: var(--cyan);
+  background: #082f49;
+}

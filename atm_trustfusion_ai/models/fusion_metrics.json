@@ -1,0 +1,73 @@
+{
+  "dataset_name": "Labeled Cross-Layer Surveillance Telemetry",
+  "total_records": 2000,
+  "test_accuracy": 100.0,
+  "classes": [
+    "FEED_SPOOFING_REPLAY_SUSPICION",
+    "NETWORK_ONLY_ANOMALY",
+    "NORMAL_AI_ALERT",
+    "NO_ALERT"
+  ],
+  "features": [
+    "has_detection",
+    "avg_confidence",
+    "content_trust",
+    "feed_trust",
+    "network_trust",
+    "motion_score",
+    "staticness_score",
+    "duplicate_score",
+    "replay_score",
+    "arp_anomaly",
+    "unknown_device",
+    "packet_rate_anomaly",
+    "auth_anomaly"
+  ],
+  "feature_importance": {
+    "has_detection": 0.0898,
+    "avg_confidence": 0.078,
+    "content_trust": 0.009,
+    "feed_trust": 0.222,
+    "network_trust": 0.1864,
+    "motion_score": 0.0486,
+    "staticness_score": 0.0817,
+    "duplicate_score": 0.1272,
+    "replay_score": 0.0852,
+    "arp_anomaly": 0.0471,
+    "unknown_device": 0.0138,
+    "packet_rate_anomaly": 0.0069,
+    "auth_anomaly": 0.0045
+  },
+  "confusion_matrix": [
+    [
+      125,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      125,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      125,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      125
+    ]
+  ],
+  "class_distribution": {
+    "FEED_SPOOFING_REPLAY_SUSPICION": 500,
+    "NO_ALERT": 500,
+    "NETWORK_ONLY_ANOMALY": 500,
+    "NORMAL_AI_ALERT": 500
+  }
+}

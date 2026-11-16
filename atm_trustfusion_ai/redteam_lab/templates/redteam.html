@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red Team Attack & Evaluation Console — Laptop 2</title>
+  <link rel="stylesheet" href="/static/redteam.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="red-header">
+    <div class="header-left">
+      <div class="hacker-icon">⚡</div>
+      <div>
+        <div class="hacker-title">RED TEAM ATTACK & EVALUATION CONSOLE</div>
+        <div class="hacker-desc">ATM Surveillance Security Testbed — Laptop 2 Controller</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="target-status-pill">
+        <span class="target-dot" id="targetDot"></span>
+        <span id="targetStatusText">Target Defender: Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- NETWORK TARGET CONFIGURATION BAR -->
+    <div class="card config-card">
+      <div class="card-header">
+        <h3>🌐 Target Network Configuration (LAN Testbed)</h3>
+        <span class="tag-hacker">LAPTOP 2 EVALUATION NODE</span>
+      </div>
+      <div class="config-inputs">
+        <div class="input-item">
+          <label>Target Defender Hub URL (Laptop 1):</label>
+          <input type="text" id="inpDefenderUrl" value="{{ config.defender_hub_url }}">
+        </div>
+        <div class="input-item">
+          <label>Target Camera Node URL (Raspberry Pi):</label>
+          <input type="text" id="inpCameraUrl" value="{{ config.camera_node_url }}">
+        </div>
+        <button class="btn btn-save" onclick="saveTargetConfig()">Update Targets</button>
+      </div>
+    </div>
+
+    <!-- LIVE TARGET IMPACT MATRIX -->
+    <div class="card target-impact-card">
+      <div class="card-header">
+        <h3>🎯 Live Target Impact Matrix (Real-time Defender Status)</h3>
+        <span class="tag-hacker" id="activeModeTag">DEFENDER MODE: NORMAL</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-stat">
+          <span class="impact-label">DEFENDER TRUST SCORE</span>
+          <div class="impact-val" id="dispTrust">--%</div>
+          <span class="impact-sub" id="dispStatus">CONNECTING...</span>
+        </div>
+        <div class="impact-stat">
+          <span class="impact-label">LAYER 1 (FEED DYNAMICS)</span>
+          <div class="impact-val" id="dispL1">--%</div>
+          <span class="impact-sub">Replay Loop & Thermal Noise</span>
+        </div>
+        <div class="impact-stat">
+          <span class="impact-label">LAYER 2 (NETWORK ML-IDS)</span>
+          <div class="impact-val" id="dispL2">--%</div>
+          <span class="impact-sub">IoT-SFC Flow Scoring & HMAC</span>
+        </div>
+        <div class="impact-stat">
+          <span class="impact-label">AI CLASSIFICATION</span>
+          <div class="impact-val impact-label-text" id="dispAiClass">NORMAL</div>
+          <span class="impact-sub">Cross-Layer Fusion AI</span>
+        </div>
+      </div>
+
+      <!-- ACTIVE ALERTS BAR -->
+      <div id="targetAlertsBar" class="target-alerts-container hidden">
+        <span class="alert-icon">⚠️</span>
+        <div id="targetAlertsList">DEFENDER ALARMS ACTIVE</div>
+      </div>
+    </div>
+
+    <!-- NETWORK RECONNAISSANCE & HONEYPOT DISCOVERY -->
+    <div class="card scanner-card">
+      <div class="scanner-top">
+        <div>
+          <h3>🔍 Network Reconnaissance & Honeypot Decoy Discovery</h3>
+          <p class="desc-hint" style="margin-top:2px;">Scan the local subnet (10.218.22.0/24) to find live cameras, defender hubs, and fake honeypot traps.</p>
+        </div>
+        <button class="btn btn-scan" id="btnScanNet" onclick="runNetworkScan()">
+          <span>🔍 Scan Network for Devices & Honeypots</span>
+        </button>
+      </div>
+
+      <!-- SCAN RESULTS AREA -->
+      <div id="scanResultsArea" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:0.84rem; color:var(--text-dim);">
+          <span id="scanSubnetText">Subnet: 10.218.22.0/24</span>
+          <span id="scanHostsCount" style="color:#10b981; font-weight:600;">● 4 Hosts Discovered</span>
+        </div>
+        <div class="scan-devices-grid" id="scanDevicesGrid"></div>
+      </div>
+
+      <!-- HONEYPOT TOUCH RESULT BANNER -->
+      <div id="honeypotTouchAlert" class="honeypot-alert-result hidden">
+        <div id="honeypotTouchText"></div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO COLUMN: ATTACK LAUNCHERS & ROGUE STREAM -->
+    <div class="main-two-col">
+      <!-- LEFT: ATTACK SCENARIO LAUNCHER -->
+      <div class="attack-column">
+        <div class="card">
+          <div class="card-header">
+            <h3>⚡ Attack Scenario Execution Console</h3>
+            <span class="tag-hacker">SELECT TO TRIGGER</span>
+          </div>
+          
+          <div class="scenarios-list">
+            <!-- SCENARIO 1: VIDEO LOOP -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🔄</span>
+                <div>
+                  <h4>1. ATM Video Replay Loop Attack</h4>
+                  <p>Injects cyclic video loop of empty ATM room. Tests if TrustFusion AI detects the loop & empty room concealment.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('LOOP')">Launch Video Loop</button>
+            </div>
+
+            <!-- SCENARIO 2: FREEZE -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">❄️</span>
+                <div>
+                  <h4>2. Camera Stream Freeze</h4>
+                  <p>Injects static still frame into stream. Tests sensor thermal noise collapse.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('FREEZE')">Launch Freeze</button>
+            </div>
+
+            <!-- SCENARIO 3: BLACKOUT -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">⬛</span>
+                <div>
+                  <h4>3. Camera Lens Blackout</h4>
+                  <p>Simulates lens spray-painted or covered. Tests luminance floor threshold.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('BLACKOUT')">Launch Blackout</button>
+            </div>
+
+            <!-- SCENARIO 4: CAMERA EXPLOIT -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🚨</span>
+                <div>
+                  <h4>4. Camera Exploit (cameraTapoC200Attack)</h4>
+                  <p>Transmits real IoT-SFC camera firmware exploit flow to test ML-IDS classification.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('EXPLOIT')">Inject Exploit</button>
+            </div>
+
+            <!-- SCENARIO 5: MITM & ROGUE FEED INJECTION -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🔀</span>
+                <div>
+                  <h4>5. WiFi Interruption + Rogue Pi Video Injection (MITM)</h4>
+                  <p>Interrupts the genuine Pi feed over WiFi, impersonates the camera node, and injects Laptop 2's looped empty ATM footage to conceal robbery.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" style="background:#d92626; font-weight:700;" onclick="executeAttack('MITM')">🚨 Hijack WiFi & Inject Rogue Feed</button>
+            </div>
+
+            <!-- SCENARIO 6: DDOS FLOOD -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🌊</span>
+                <div>
+                  <h4>6. Network DDoS Flood (synFlood)</h4>
+                  <p>Transmits abnormal TCP SYN packet burst to camera node port.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('NET_FLOOD')">Inject Flood</button>
+            </div>
+
+            <!-- SCENARIO 7: TOKEN REPLAY -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🔁</span>
+                <div>
+                  <h4>7. Cryptographic Sequence Replay</h4>
+                  <p>Replays captured packets with stale monotonic sequence counter.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('TOKEN_REPLAY')">Inject Replay</button>
+            </div>
+
+            <!-- SCENARIO 8: HONEYPOT TRIPWIRE -->
+            <div class="scenario-box">
+              <div class="scenario-meta">
+                <span class="scenario-icon">🍯</span>
+                <div>
+                  <h4>8. Probe Cowrie Decoy Honeypot</h4>
+                  <p>Simulates attacker discovering decoy SSH port 2222 or web trap. Tests cyber tripwire tripping & IP blacklist.</p>
+                </div>
+              </div>
+              <button class="btn btn-launch" onclick="executeAttack('HONEYPOT_HIT')">Probe Honeypot</button>
+            </div>
+
+            <!-- RESET BUTTON -->
+            <button class="btn btn-reset-all" onclick="executeAttack('RESET')">
+              ✅ Clear All Attacks & Reset Defender to Normal
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: ROGUE FEED PREVIEW & AI DETECTION BENCHMARK -->
+      <div class="sidebar-column">
+        <!-- ROGUE STREAM PREVIEW -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📹 Rogue Video Stream Server</h3>
+            <span class="tag-hacker">HOSTED ON LAPTOP 2</span>
+          </div>
+          <p class="desc-hint">This console generates and broadcasts a rogue looped empty ATM room feed at:</p>
+          <div class="url-copy-box">
+            <code>http://{{ request.host }}/rogue_feed</code>
+          </div>
+          <div class="rogue-stream-container">
+            <img src="/rogue_feed" alt="Rogue Looped Stream" class="rogue-img">
+          </div>
+        </div>
+
+        <!-- AI DETECTION BENCHMARK -->
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header">
+            <h3>⚡ AI Detection Latency Benchmark</h3>
+          </div>
+          <p class="desc-hint">Benchmark how fast the Defender's AI model classifies attacks over the LAN:</p>
+          <div class="benchmark-btns">
+            <button class="btn btn-bench" onclick="runBenchmark('cameraTapoC200Attack')">TapoC200 Exploit</button>
+            <button class="btn btn-bench" onclick="runBenchmark('mitmArpSpoof')">mitmArpSpoof</button>
+            <button class="btn btn-bench" onclick="runBenchmark('synFlood')">synFlood</button>
+            <button class="btn btn-bench" onclick="runBenchmark('HttpFlood')">HttpFlood</button>
+            <button class="btn btn-bench" onclick="runBenchmark('HydraBruteForce')">Hydra SSH</button>
+            <button class="btn btn-bench" onclick="runBenchmark('botnetSim')">Botnet DDoS</button>
+            <button class="btn btn-bench" onclick="runBenchmark('scanning')">Port Scan</button>
+          </div>
+          <div id="benchResultBox" class="bench-result hidden">
+            <h4>Benchmark Result:</h4>
+            <div id="benchContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/redteam.js"></script>
+</body>
+</html>

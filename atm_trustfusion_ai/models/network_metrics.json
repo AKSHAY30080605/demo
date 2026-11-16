@@ -1,0 +1,52 @@
+{
+  "dataset_name": "IoT-SFC v2 Network Flows",
+  "total_flows": 142502,
+  "test_accuracy": 99.98,
+  "roc_auc": 0.999999,
+  "multiclass_accuracy": 86.37,
+  "attack_types": [
+    "synFlood",
+    "HttpFlood",
+    "botnetSim",
+    "scanning",
+    "normal",
+    "cameraTapoC200Attack",
+    "HydraBruteForce",
+    "udpFlood",
+    "slowloris",
+    "mqtt_dos",
+    "mqtt_spoof",
+    "mqtt_sniff",
+    "mitmArpSpoof",
+    "mqtt_malformed"
+  ],
+  "features": [
+    "orig_p",
+    "resp_p",
+    "duration",
+    "orig_bytes",
+    "resp_bytes",
+    "orig_pkts",
+    "resp_pkts",
+    "orig_ip_bytes",
+    "resp_ip_bytes",
+    "missed_bytes"
+  ],
+  "class_distribution": {
+    "synFlood": 20000,
+    "HttpFlood": 20000,
+    "botnetSim": 20000,
+    "scanning": 20000,
+    "normal": 20000,
+    "cameraTapoC200Attack": 20000,
+    "HydraBruteForce": 14492,
+    "udpFlood": 2980,
+    "slowloris": 1625,
+    "mqtt_dos": 1085,
+    "mqtt_spoof": 886,
+    "mqtt_sniff": 867,
+    "mitmArpSpoof": 340,
+    "mqtt_malformed": 221,
+    "mqtt_brute_force": 6
+  }
+}

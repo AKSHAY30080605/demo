@@ -12,9 +12,11 @@ env/
 cowrie-env/
 **/cowrie-env/
 
-# Large recorded incident video files (exceeding GitHub limits)
+# Large recorded incident video files & test session files
 atm_trustfusion_ai/incident_footage/*.mp4
 atm_trustfusion_ai/incident_footage/archived/*.mp4
+atm_trustfusion_ai/incident_footage/incident_*.json
+atm_trustfusion_ai/incident_footage/archived/
 atm_trustfusion_ai/static/recovered_footage.mp4
 atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/*.mp4
 !atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/empty_atm_loop.mp4

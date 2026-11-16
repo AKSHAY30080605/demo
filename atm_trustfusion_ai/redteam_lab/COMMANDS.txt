@@ -1,0 +1,14 @@
+===================================================================================
+  🔴 COLLEGE PRESENTATION ATTACK EXECUTION CHEAT SHEET (PC 2 RED TEAM)
+  Target Camera: Raspberry Pi (10.218.22.14:8081)
+  Target Defender: TrustFusion AI SOC on PC 1 (10.218.22.163:8502)
+  Attacker Laptop: PC 2 Console (http://10.218.22.163:8503)
+===================================================================================
+
+STEP 1: scan-wifi
+STEP 2: connect-wifi ATM_SURVEILLANCE_5G
+STEP 3: nmap 10.218.22.0/24
+STEP 4: ssh pi1@10.218.22.14    (Password: 123, then 'exit')
+STEP 5: inject --mismatch-port 8503
+STEP 6: check-defender
+STEP 7: reset

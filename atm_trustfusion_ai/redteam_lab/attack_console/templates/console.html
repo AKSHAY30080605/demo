@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC2 Red Team Kill Chain Console | TrustFusion AI Testbed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #070a10;
+            --panel-bg: #0f1523;
+            --panel-sub: #141c2c;
+            --border-color: #1e283d;
+            --accent-red: #ff2d4a;
+            --accent-amber: #ffaa00;
+            --accent-green: #00e676;
+            --accent-cyan: #00e5ff;
+            --accent-purple: #b388ff;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: #d1d7e0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        .header-bar {
+            background: linear-gradient(180deg, #131b2e 0%, #0a0f1c 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+        }
+        .console-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header-custom {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .stage-box {
+            border-left: 4px solid #334155;
+            transition: all 0.3s ease;
+        }
+        .stage-box.active {
+            border-left-color: var(--accent-red);
+            background: rgba(255, 45, 74, 0.05);
+        }
+        .stage-box.unlocked {
+            border-left-color: var(--accent-amber);
+        }
+        .stage-box.completed {
+            border-left-color: var(--accent-green);
+        }
+        .trust-score-display {
+            font-size: 2.5rem;
+            font-weight: 900;
+            font-family: 'Consolas', monospace;
+            line-height: 1;
+        }
+        .audit-table {
+            font-size: 0.82rem;
+        }
+        .audit-table th {
+            color: #8b949e;
+            font-weight: 600;
+            background: #090e18;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .audit-table td {
+            border-bottom: 1px solid #141c2c;
+            vertical-align: middle;
+        }
+        .active-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 45, 74, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 45, 74, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 45, 74, 0); }
+        }
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            margin-right: 10px;
+        }
+        .btn-attack-family {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 10px 14px;
+            text-align: left;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+        .btn-attack-family:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        .nav-pills .nav-link {
+            color: #94a3b8;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
+        .nav-pills .nav-link.active {
+            background: #2563eb;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header-bar d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-danger me-2"><i class="fa-solid fa-skull-crossbones me-1"></i> RED TEAM LAB</span>
+            <span class="fs-5 fw-bold text-light">PC2 Attack &amp; Kill Chain Console</span>
+            <span class="text-secondary ms-2 small">| CICIDS2017 &amp; CICDDoS2019 Penetration Suite</span>
+        </div>
+        <div>
+            <a href="/terminal" class="btn btn-sm btn-outline-info me-2"><i class="fa-solid fa-terminal me-1"></i> Kali Wi-Fi Terminal</a>
+            <span class="badge bg-dark border border-secondary text-secondary me-2">HOST: PC2 (:8503)</span>
+            <span class="badge bg-dark border border-secondary text-secondary">TARGET: PC1 (:8502)</span>
+        </div>
+    </div>
+
+    <div class="container-fluid px-4 py-3">
+        
+        <!-- Live Real-Time PC1 Defender Mirror Banner -->
+        <div class="console-card border-danger mb-3">
+            <div class="card-header-custom text-danger d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-satellite-dish me-2"></i> Live Reflection on PC1 Defender SOC (Updated Every 1s)</span>
+                <span class="badge bg-danger active-pulse" id="pc1StatusBadge">CONNECTING...</span>
+            </div>
+            <div class="p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center border-end border-secondary">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1">PC1 Composite Trust</div>
+                        <div class="trust-score-display text-success" id="pc1TrustText">--%</div>
+                        <div class="small fw-bold mt-1 text-secondary" id="pc1StatusText">INITIALIZING</div>
+                    </div>
+                    <div class="col-md-3 px-3 border-end border-secondary text-center">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1">Layer 2 Net Health</div>
+                        <div class="fs-2 fw-bold text-info" id="pc1NetHealth">100%</div>
+                        <div class="small text-secondary" id="pc1NetStatus">ML-IDS Clean</div>
+                    </div>
+                    <div class="col-md-3 px-3 border-end border-secondary">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1">Active Defense Alarms</div>
+                        <div id="pc1AlarmsBox">
+                            <span class="badge bg-success">SECURE: No Active Alarms</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 px-3">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1">PC1 Video Source Port</div>
+                        <code class="d-block text-truncate text-warning" id="pc1SourceBox">http://10.218.22.14:8081/</code>
+                        <div class="small text-secondary mt-1">
+                            Current Attack Mode: <strong class="text-light" id="killchainPhaseText">NORMAL</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode Navigation Tabs -->
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-killchain-tab" data-bs-toggle="pill" data-bs-target="#pills-killchain" type="button" role="tab">
+                    <i class="fa-solid fa-diagram-project me-1"></i> Sequential Gated Kill Chain (Stage 1 &rarr; 2 &rarr; 3)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-families-tab" data-bs-toggle="pill" data-bs-target="#pills-families" type="button" role="tab">
+                    <i class="fa-solid fa-list-check me-1"></i> All 5 Attack Families (CICIDS2017 &amp; CICDDoS2019)
+                </button>
+            </li>
+        </ul>
+
+        <div class="row">
+            <!-- Left Column: Attack Workflows & Libraries -->
+            <div class="col-lg-7">
+                
+                <div class="tab-content" id="pills-tabContent">
+                    
+                    <!-- TAB 1: GATED SEQUENTIAL KILL CHAIN -->
+                    <div class="tab-pane fade show active" id="pills-killchain" role="tabpanel">
+                        
+                        <!-- STAGE 1: Volumetric Network Saturation Attack -->
+                        <div class="console-card stage-box" id="cardStage1">
+                            <div class="card-header-custom d-flex justify-content-between align-items-center text-info">
+                                <div>
+                                    <span class="step-num bg-info text-dark">1</span>
+                                    <span>STAGE 1: Volumetric Network &amp; Transport Layer Saturation</span>
+                                </div>
+                                <span class="badge bg-info text-dark" id="stage1Badge">PREREQUISITE #1</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-3">
+                                    <strong class="text-light">Operational Objective:</strong> Saturate PC1 network sockets with high-volume TCP/UDP flow bursts. This collapses PC1's Layer 2 ML-IDS Score below 50% and trips <code>NET_FLOOD_SUSPECTED</code>.
+                                    <br><span class="text-warning">⚠️ Note: Stage 2 Video Stream Injection is strictly LOCKED until this attack executes.</span>
+                                </p>
+                                
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-info fw-bold py-2 flex-grow-1" id="btnStage1" onclick="executeStage1()">
+                                        <i class="fa-solid fa-bolt me-2"></i> Launch Stage 1: Volumetric Network Attack
+                                    </button>
+                                </div>
+                                <div id="stage1Alert" class="mt-2 text-info small fw-bold" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- STAGE 2: Custom MP4 Video Stream Injection & Edge Node Activation -->
+                        <div class="console-card stage-box" id="cardStage2">
+                            <div class="card-header-custom d-flex justify-content-between align-items-center text-danger">
+                                <div>
+                                    <span class="step-num bg-danger text-white">2</span>
+                                    <span>STAGE 2: Video Stream Hijack &amp; Custom MP4 Injection</span>
+                                </div>
+                                <span class="badge bg-secondary" id="stage2Badge">LOCKED</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-3">
+                                    <strong class="text-light">Operational Objective:</strong> Hijack PC1 camera stream over Rogue Port 8503 with a selected or uploaded MP4 video.
+                                    <br><strong class="text-cyan" style="color:var(--accent-cyan);">Edge Node Autonomous Defense:</strong> As soon as this injection begins, the physical Raspberry Pi camera node automatically initiates local black-box recording of the real physical scene!
+                                </p>
+
+                                <!-- Video Selection & Upload Box -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-7">
+                                        <label class="small text-secondary fw-bold mb-1">Choose Pre-Loaded Injection Video (.mp4):</label>
+                                        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="selectMp4">
+                                            {% for mp4 in mp4s %}
+                                            <option value="{{ mp4 }}" {% if loop.first %}selected{% endif %}>{{ mp4 }}</option>
+                                            {% else %}
+                                            <option value="empty_atm_loop.mp4">empty_atm_loop.mp4 (Empty Room Loop)</option>
+                                            <option value="peaceful_corridor.mp4">peaceful_corridor.mp4 (Peaceful Scene)</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="small text-secondary fw-bold mb-1">Or Upload Custom MP4:</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="file" class="form-control bg-dark text-light border-secondary" id="uploadFile" accept=".mp4">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="uploadCustomVideo()">Upload</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-danger fw-bold py-2 w-100" id="btnStage2" onclick="executeStage2()" disabled>
+                                    <i class="fa-solid fa-video-slash me-2"></i> Inject Selected MP4 Video to PC1 (Rogue Port 8503)
+                                </button>
+                                <div id="stage2Alert" class="mt-2 text-danger small fw-bold" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- STAGE 3: Attack Reset & Physical Edge Evidence Synchronization -->
+                        <div class="console-card stage-box" id="cardStage3">
+                            <div class="card-header-custom d-flex justify-content-between align-items-center text-success">
+                                <div>
+                                    <span class="step-num bg-success text-dark">3</span>
+                                    <span>STAGE 3: Reset Attack &amp; Synchronize Authentic Pi Edge Evidence</span>
+                                </div>
+                                <span class="badge bg-secondary" id="stage3Badge">STANDBY</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-3">
+                                    <strong class="text-light">Operational Objective:</strong> Stop spoofed injection, restore authentic Pi camera feed (Port 8081) on PC1, finalize the Pi's local black-box video recording, and synchronize the recovered authentic footage directly to PC1's dashboard.
+                                </p>
+
+                                <button class="btn btn-success fw-bold py-2 w-100" id="btnStage3" onclick="executeStage3()">
+                                    <i class="fa-solid fa-shield-halved me-2"></i> Reset Attack &amp; Synchronize Authentic Footage to PC1
+                                </button>
+                                <div id="stage3Alert" class="mt-2 text-success small fw-bold" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- TAB 2: COMPREHENSIVE ATTACK FAMILIES SUITE -->
+                    <div class="tab-pane fade" id="pills-families" role="tabpanel">
+                        
+                        <!-- Family A: Volumetric & Flooding Attacks -->
+                        <div class="console-card">
+                            <div class="card-header-custom text-info d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-water me-2"></i> Family A: Volumetric &amp; Flooding Attacks (Bandwidth Starvation)</span>
+                                <span class="badge bg-info text-dark">CICDDoS2019 / CICIDS2017</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-2">Exhausts connection tables and starves camera streaming bandwidth.</p>
+                                
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('SYN_FLOOD')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-bolt text-info me-2"></i> TCP SYN Flood</div>
+                                        <div class="small text-secondary">Thousands of half-open TCP handshakes exhausting camera socket memory.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-info">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('UDP_FLOOD')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-fire-flame-curved text-warning me-2"></i> UDP Volumetric Flood</div>
+                                        <div class="small text-secondary">High-speed bursts of stateless UDP packets saturating camera network interface.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('AMPLIFICATION_DDOS')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-burst text-danger me-2"></i> Reflection / Amplification DDoS (DNS/NTP)</div>
+                                        <div class="small text-secondary">Exploits reflected traffic to magnify volumetric bursts toward the surveillance switch.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">Launch</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Family B: Application-Layer & Slow-Rate DoS -->
+                        <div class="console-card">
+                            <div class="card-header-custom text-warning d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-snowflake me-2"></i> Family B: Application-Layer &amp; Slow-Rate DoS (Silent Freeze Attacks)</span>
+                                <span class="badge bg-warning text-dark">CICIDS2017</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-2">Silently starves frame processing without generating massive suspicious volumetric spikes.</p>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('SLOWLORIS')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-hourglass-half text-warning me-2"></i> DoS Slowloris (Slow HTTP Headers)</div>
+                                        <div class="small text-secondary">Sends partial HTTP headers slowly to keep camera web server sockets tied up indefinitely.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('SLOWHTTPTEST')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-stopwatch text-warning me-2"></i> DoS Slowhttptest (Slow POST Body)</div>
+                                        <div class="small text-secondary">Holds HTTP stream connections open with sluggish POST bodies to exhaust workers.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('HTTP_FLOOD')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-tornado text-danger me-2"></i> DoS Hulk / GoldenEye (HTTP Flood)</div>
+                                        <div class="small text-secondary">Rapid randomized HTTP requests targeting camera streaming endpoints (:8081).</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">Launch</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Family C: Reconnaissance & Password Attacks -->
+                        <div class="console-card">
+                            <div class="card-header-custom text-primary d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-magnifying-glass me-2"></i> Family C: Reconnaissance &amp; Password Attacks</span>
+                                <span class="badge bg-primary">CICIDS2017</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-2">Locates the camera streaming ports and attempts unauthorized administrative credential takeover.</p>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('PORTSCAN')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-network-wired text-info me-2"></i> PortScan / Nmap Reconnaissance</div>
+                                        <div class="small text-secondary">Probes camera ports (22, 80, 554, 8080, 8081) mapping active streaming attack surfaces.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-info">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('BRUTE_FORCE')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-key text-warning me-2"></i> SSH-Patator &amp; Hydra Brute-Force</div>
+                                        <div class="small text-secondary">Automated dictionary attack guessing passwords against camera SSH/FTP management ports.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning">Launch</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Family D: Malware, Web Exploits & Infiltration -->
+                        <div class="console-card">
+                            <div class="card-header-custom text-danger d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-shield-virus me-2"></i> Family D: Malware, Web Exploits &amp; Infiltration</span>
+                                <span class="badge bg-danger">CICIDS2017 / IoT-SFC</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-2">Exploits camera software vulnerabilities or performs Man-in-the-Middle network infiltration.</p>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('BOTNET_C2')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-robot text-danger me-2"></i> Botnet C2 Traffic (Mirai Simulation)</div>
+                                        <div class="small text-secondary">Periodic Command-and-Control beaconing simulating compromised IoT edge nodes.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('WEB_EXPLOIT')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-bug text-danger me-2"></i> Camera Web Attack (SQLi / XSS / Buffer Overflow)</div>
+                                        <div class="small text-secondary">Malicious payloads against camera web services (Tapo C200 / RTSP buffer exploit).</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">Launch</button>
+                                </div>
+
+                                <div class="btn-attack-family d-flex justify-content-between align-items-center" onclick="triggerDirectAttack('INFILTRATION')">
+                                    <div>
+                                        <div class="fw-bold text-light"><i class="fa-solid fa-mask text-warning me-2"></i> Infiltration &amp; ARP Spoofing (MITM Stream Hijack)</div>
+                                        <div class="small text-secondary">Poisons ARP bindings and injects invalid cryptographic HMAC signatures into video feed.</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning">Launch</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Family E: Baseline Normal (BENIGN Traffic) -->
+                        <div class="console-card">
+                            <div class="card-header-custom text-success d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-circle-check me-2"></i> Family E: Baseline Normal (BENIGN Traffic)</span>
+                                <span class="badge bg-success">100% HEALTH</span>
+                            </div>
+                            <div class="p-3">
+                                <p class="small text-secondary mb-2">Restores authentic clean camera streaming with valid cryptographic HMAC tokens.</p>
+
+                                <button class="btn btn-success fw-bold py-2 w-100" onclick="triggerDirectAttack('BENIGN_NORMAL')">
+                                    <i class="fa-solid fa-check-double me-2"></i> Restore Benign Normal Surveillance Traffic
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Auxiliary Penetration Tools -->
+                <div class="console-card">
+                    <div class="card-header-custom text-secondary d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-wrench me-2"></i> Auxiliary Tools &amp; Hardware Disconnect</span>
+                    </div>
+                    <div class="p-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-warning flex-grow-1" onclick="triggerWifiDisconnect()">
+                            <i class="fa-solid fa-wifi me-1"></i> Trigger Real Wi-Fi Disconnect
+                        </button>
+                        <a href="/terminal" class="btn btn-sm btn-outline-light flex-grow-1 text-center">
+                            <i class="fa-solid fa-terminal me-1"></i> Open Terminal View
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Rogue Video Stream Preview & Audit Trail -->
+            <div class="col-lg-5">
+                
+                <!-- Rogue Video Stream Output Preview -->
+                <div class="console-card">
+                    <div class="card-header-custom text-danger d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-display me-2"></i> PC2 Rogue Stream Preview (:8503)</span>
+                        <span class="badge bg-danger" id="streamModeBadge">ROGUE FEED</span>
+                    </div>
+                    <div class="p-2 text-center bg-black">
+                        <img src="/rogue_stream.mjpg" alt="Rogue Video Stream" class="img-fluid rounded border border-dark" style="max-height: 240px; width: 100%; object-fit: contain;">
+                    </div>
+                </div>
+
+                <!-- Live Audit Trail Log -->
+                <div class="console-card">
+                    <div class="card-header-custom text-secondary d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-clipboard-list me-2"></i> Live Audit Trail</span>
+                        <button class="btn btn-sm btn-outline-secondary py-0" onclick="pollTelemetry()"><i class="fa-solid fa-arrows-rotate"></i> Poll</button>
+                    </div>
+                    <div class="p-0 table-responsive" style="max-height: 480px; overflow-y: auto;">
+                        <table class="table table-dark table-hover audit-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>PC1 Trust</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                {% for entry in logs %}
+                                <tr>
+                                    <td class="text-secondary font-monospace">{{ entry.timestamp }}</td>
+                                    <td><strong class="text-light">{{ entry.action }}</strong></td>
+                                    <td class="text-secondary">{{ entry.details }}</td>
+                                    <td><span class="badge bg-{{ 'danger' if entry.pc1_trust and entry.pc1_trust < 60 else 'success' }}">{{ entry.pc1_trust }}%</span></td>
+                                    <td><span class="badge {{ 'bg-danger' if entry.status in ['ACTIVE', 'SPOOFING_ACTIVE', 'STAGE1_ACQUIRED'] else 'bg-success' }}">{{ entry.status }}</span></td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-secondary py-3">No actions logged yet. Choose an attack to begin.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let isStage1Done = false;
+        let isStage2Done = false;
+
+        function updateKillchainUI(kc) {
+            isStage1Done = !!kc.stage1_network_done;
+            isStage2Done = !!kc.stage2_injected;
+
+            const card1 = document.getElementById("cardStage1");
+            const badge1 = document.getElementById("stage1Badge");
+            const btn1 = document.getElementById("btnStage1");
+
+            const card2 = document.getElementById("cardStage2");
+            const badge2 = document.getElementById("stage2Badge");
+            const btn2 = document.getElementById("btnStage2");
+
+            const card3 = document.getElementById("cardStage3");
+            const badge3 = document.getElementById("stage3Badge");
+            const phaseText = document.getElementById("killchainPhaseText");
+
+            if (isStage1Done) {
+                card1.className = "console-card stage-box completed";
+                badge1.className = "badge bg-success";
+                badge1.innerText = "COMPROMISED (PASSED)";
+                btn1.className = "btn btn-outline-secondary py-2 flex-grow-1";
+                btn1.innerText = "Stage 1 Done (Rerun Network Flood)";
+
+                card2.className = "console-card stage-box active";
+                badge2.className = "badge bg-danger active-pulse";
+                badge2.innerText = "UNLOCKED & ARMED";
+                btn2.disabled = false;
+                phaseText.innerText = "STAGE1_COMPROMISED (STAGE2_UNLOCKED)";
+            } else {
+                card1.className = "console-card stage-box active";
+                badge1.className = "badge bg-info text-dark";
+                badge1.innerText = "PREREQUISITE #1";
+                btn1.className = "btn btn-outline-info fw-bold py-2 flex-grow-1";
+                btn1.innerHTML = '<i class="fa-solid fa-bolt me-2"></i> Launch Stage 1: Volumetric Network Attack';
+
+                card2.className = "console-card stage-box";
+                badge2.className = "badge bg-secondary";
+                badge2.innerText = "LOCKED (Requires Stage 1)";
+                btn2.disabled = true;
+                phaseText.innerText = "READY_FOR_STAGE1";
+            }
+
+            if (isStage2Done) {
+                card2.className = "console-card stage-box completed";
+                badge2.className = "badge bg-danger active-pulse";
+                badge2.innerText = "SPOOFING ACTIVE (PI RECORDING)";
+
+                card3.className = "console-card stage-box active";
+                badge3.className = "badge bg-success active-pulse";
+                badge3.innerText = "READY FOR RECOVERY";
+                phaseText.innerText = "STAGE2_SPOOFING (PI_EDGE_RECORDING)";
+            } else {
+                card3.className = "console-card stage-box";
+                badge3.className = "badge bg-secondary";
+                badge3.innerText = "STANDBY";
+            }
+        }
+
+        async function triggerDirectAttack(attackName) {
+            try {
+                const res = await fetch(`/api/simulate/${attackName}`, { method: 'POST' });
+                const d = await res.json();
+                pollTelemetry();
+            } catch (err) {
+                alert("Error launching " + attackName + ": " + err);
+            }
+        }
+
+        async function executeStage1() {
+            const btn = document.getElementById("btnStage1");
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saturating Network Sockets...';
+            try {
+                const res = await fetch('/api/killchain/stage1_network', { method: 'POST' });
+                const d = await res.json();
+                const alertEl = document.getElementById("stage1Alert");
+                alertEl.style.display = "block";
+                alertEl.innerText = d.message;
+                pollTelemetry();
+            } catch (err) {
+                alert("Stage 1 Error: " + err);
+            }
+        }
+
+        async function executeStage2() {
+            const select = document.getElementById("selectMp4");
+            const mp4Val = select ? select.value : "empty_atm_loop.mp4";
+            const btn = document.getElementById("btnStage2");
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Injecting Video & Arming Pi Node...';
+            try {
+                const res = await fetch('/api/killchain/stage2_inject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mp4_file: mp4Val })
+                });
+                const d = await res.json();
+                if (!d.ok) {
+                    alert(d.error);
+                } else {
+                    const alertEl = document.getElementById("stage2Alert");
+                    alertEl.style.display = "block";
+                    alertEl.innerText = d.message;
+                }
+                pollTelemetry();
+            } catch (err) {
+                alert("Stage 2 Error: " + err);
+            }
+        }
+
+        async function executeStage3() {
+            const btn = document.getElementById("btnStage3");
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Restoring Genuine Feed & Syncing Pi Evidence...';
+            try {
+                const res = await fetch('/api/killchain/stage3_reset', { method: 'POST' });
+                const d = await res.json();
+                const alertEl = document.getElementById("stage3Alert");
+                alertEl.style.display = "block";
+                alertEl.innerText = d.message;
+                document.getElementById("stage1Alert").style.display = "none";
+                document.getElementById("stage2Alert").style.display = "none";
+                pollTelemetry();
+            } catch (err) {
+                alert("Stage 3 Error: " + err);
+            }
+        }
+
+        async function uploadCustomVideo() {
+            const fileInput = document.getElementById("uploadFile");
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select an .mp4 file to upload.");
+                return;
+            }
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch("/api/upload_mp4", {
+                    method: "POST",
+                    body: formData
+                });
+                const d = await res.json();
+                if (d.ok) {
+                    alert("Video uploaded: " + d.filename);
+                    const sel = document.getElementById("selectMp4");
+                    const opt = document.createElement("option");
+                    opt.value = d.filename;
+                    opt.innerText = d.filename + " (Custom Upload)";
+                    opt.selected = true;
+                    sel.appendChild(opt);
+                } else {
+                    alert("Upload error: " + d.error);
+                }
+            } catch (err) {
+                alert("Upload failed: " + err);
+            }
+        }
+
+        function triggerWifiDisconnect() {
+            if (confirm("Execute hardware Wi-Fi disconnect command on PC2 interface?")) {
+                fetch('/api/simulate/wifi_disconnect', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(d => alert(d.message || "Wi-Fi disconnect command dispatched."))
+                    .catch(e => alert("Error: " + e));
+            }
+        }
+
+        function pollTelemetry() {
+            fetch('/api/pc1_telemetry')
+                .then(r => r.json())
+                .then(data => {
+                    const pc1 = data.pc1 || {};
+                    const trust = pc1.trust_score || 0;
+                    const status = pc1.status || "UNKNOWN";
+                    const alerts = pc1.active_alerts || [];
+                    const source = pc1.camera_source || "N/A";
+                    const netHealth = pc1.layer2_net_health !== undefined ? pc1.layer2_net_health : 100;
+
+                    // Update UI Stepper Gating
+                    if (data.killchain) {
+                        updateKillchainUI(data.killchain);
+                    }
+
+                    // Trust Score Display
+                    const trustEl = document.getElementById("pc1TrustText");
+                    trustEl.innerText = `${trust.toFixed(1)}%`;
+                    if (trust < 60) {
+                        trustEl.className = "trust-score-display text-danger";
+                    } else if (trust < 80) {
+                        trustEl.className = "trust-score-display text-warning";
+                    } else {
+                        trustEl.className = "trust-score-display text-success";
+                    }
+
+                    // Layer 2 Net Health
+                    const netEl = document.getElementById("pc1NetHealth");
+                    netEl.innerText = `${netHealth.toFixed(0)}%`;
+                    netEl.className = netHealth < 60 ? "fs-2 fw-bold text-danger" : (netHealth < 80 ? "fs-2 fw-bold text-warning" : "fs-2 fw-bold text-info");
+                    document.getElementById("pc1NetStatus").innerText = netHealth < 60 ? "CRITICAL FLOOD" : (netHealth < 80 ? "STARVATION RISK" : "ML-IDS Clean");
+
+                    // Status Text
+                    document.getElementById("pc1StatusText").innerText = status;
+                    const statusBadge = document.getElementById("pc1StatusBadge");
+                    statusBadge.innerText = status;
+                    statusBadge.className = `badge ${trust < 60 ? 'bg-danger active-pulse' : (trust < 80 ? 'bg-warning text-dark' : 'bg-success')}`;
+
+                    document.getElementById("pc1SourceBox").innerText = source;
+
+                    // Alarms
+                    const alarmsBox = document.getElementById("pc1AlarmsBox");
+                    alarmsBox.innerHTML = "";
+                    if (alerts.length === 0) {
+                        alarmsBox.innerHTML = '<span class="badge bg-success">SECURE: No Active Alarms</span>';
+                    } else {
+                        alerts.forEach(a => {
+                            const span = document.createElement("span");
+                            span.className = "badge bg-danger me-1 mb-1";
+                            span.innerText = a;
+                            alarmsBox.appendChild(span);
+                        });
+                    }
+
+                    // Audit Table
+                    const tbody = document.getElementById("auditTableBody");
+                    if (data.audit_log && data.audit_log.length > 0) {
+                        tbody.innerHTML = "";
+                        data.audit_log.forEach(item => {
+                            const tr = document.createElement("tr");
+                            const trustBadge = item.pc1_trust !== null ? 
+                                `<span class="badge ${item.pc1_trust < 60 ? 'bg-danger' : 'bg-success'}">${item.pc1_trust}%</span>` : '--';
+                            tr.innerHTML = `
+                                <td class="text-secondary font-monospace">${item.timestamp}</td>
+                                <td><strong class="text-light">${item.action}</strong></td>
+                                <td class="text-secondary">${item.details}</td>
+                                <td>${trustBadge}</td>
+                                <td><span class="badge ${item.status === 'ACTIVE' || item.status === 'SPOOFING_ACTIVE' || item.status === 'STAGE1_ACQUIRED' ? 'bg-danger' : 'bg-success'}">${item.status}</span></td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                })
+                .catch(err => console.error("Telemetry poll failed:", err));
+        }
+
+        setInterval(pollTelemetry, 1200);
+        pollTelemetry();
+    </script>
+</body>
+</html>
