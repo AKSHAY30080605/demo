@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC1 | Camera-DoS Intrusion Detector Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #080c14; color: #cbd5e1; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .pulse-red { animation: pulseRed 1.8s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .pulse-green { animation: pulseGreen 2.2s infinite; }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-6">
+
+    <!-- Top Header Navigation -->
+    <header class="glass-panel rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+            <span class="p-2.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xl">
+                <i class="fa-solid fa-shield-halved"></i>
+            </span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-white tracking-wide flex items-center gap-2">
+                    CAMERA-DoS INTRUSION DETECTOR <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">PC1 SOC</span>
+                </h1>
+                <p class="text-xs text-slate-400">Real-Time ML Flow Inspection &amp; Decision Boundary Analysis (CICFlowMeter Schema)</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+            <div id="pc2StatusPill" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                <span>PC2 Control: DISCONNECTED</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
+                <i class="fa-solid fa-wifi text-emerald-400 mr-1"></i> Mode: <span class="font-bold text-slate-200">Replay Stream (1 Hz)</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
+                Latency: <span id="wsLatencyText" class="font-bold text-cyan-400">4 ms</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+
+        <!-- Column 1: Big Verdict Card, Probability Chart, Why This Verdict (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- 1. Big Verdict Card -->
+            <div id="verdictCard" class="glass-panel rounded-2xl p-6 border-2 border-emerald-500/40 relative overflow-hidden pulse-green">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold tracking-wider uppercase text-slate-400">AI ML-IDS INFERENCE VERDICT</span>
+                    <span id="verdictConfidenceBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        100.0% CONFIDENCE
+                    </span>
+                </div>
+                
+                <div id="verdictTitle" class="text-4xl md:text-5xl font-black text-emerald-400 my-2 tracking-tight">
+                    BENIGN
+                </div>
+
+                <p id="verdictReason" class="text-sm text-slate-300 mt-2 leading-relaxed">
+                    Flow parameters reflect standard authorized camera streaming telemetry. No volumetric saturation or timing anomalies detected.
+                </p>
+
+                <!-- Unrealistic Warning Badge -->
+                <div id="consistencyWarningBadge" class="mt-4 hidden p-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                    <span id="consistencyWarningText">Unrealistic combination: Derived features unlinked</span>
+                </div>
+            </div>
+
+            <!-- 2. Decision Boundary Helper -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-crosshairs text-cyan-400"></i> Decision-Boundary Sensitivity Helper
+                </h3>
+                <div id="boundaryBox" class="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs leading-relaxed">
+                    <div class="font-bold text-slate-200" id="boundaryFeatureTitle">Analyzing decision boundary...</div>
+                    <div class="mt-1 text-slate-400" id="boundaryDetails">Sweeping key features across range with all other features fixed.</div>
+                </div>
+            </div>
+
+            <!-- 3. Probability Distribution Bar Chart -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800 flex-grow">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-chart-column text-indigo-400 mr-2"></i> Class Probability Distribution</span>
+                    <span class="text-[10px] text-slate-500">Softmax Confidence</span>
+                </h3>
+                <div class="h-56 relative">
+                    <canvas id="probsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. "Why This Verdict" Feature Contributions -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-purple-400"></i> Why This Verdict? (Top 8 Contributors)
+                </h3>
+                <div id="explainContainer" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Column 2: Side-by-side Table & Time-series Trend (7 Cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- 5. 5-Minute Time-Series Confidence Trend -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> 5-Minute Confidence &amp; State Timeline
+                    </h3>
+                    <span class="text-[10px] text-slate-500">Live Rolling Window</span>
+                </div>
+                <div class="h-44 relative">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 6. Side-by-Side Comparison Table -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800 flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-table-columns text-cyan-400"></i> Live vs. Modified Flow Telemetry
+                    </h3>
+                    <span class="text-[11px] text-slate-400">
+                        Modified features highlighted in <span class="text-yellow-300 font-bold">yellow</span>
+                    </span>
+                </div>
+                
+                <div class="overflow-x-auto flex-grow max-h-[360px] overflow-y-auto rounded-lg border border-slate-800">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/90 text-slate-400 uppercase font-bold sticky top-0 border-b border-slate-800">
+                            <tr>
+                                <th class="p-2.5">Feature Name</th>
+                                <th class="p-2.5">Unit</th>
+                                <th class="p-2.5">Live Camera Value</th>
+                                <th class="p-2.5">Modified (PC2)</th>
+                                <th class="p-2.5">Delta %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="telemetryTableBody" class="divide-y divide-slate-800/60 font-mono">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 7. Event Log Table -->
+            <div class="glass-panel rounded-xl p-5 border border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-list text-slate-400"></i> Audit Log (Who Changed What &amp; Verdict Flip)
+                </h3>
+                <div class="overflow-x-auto max-h-36 overflow-y-auto rounded-lg border border-slate-800">
+                    <table class="w-full text-left text-[11px]">
+                        <thead class="bg-slate-900/90 text-slate-500 uppercase sticky top-0 border-b border-slate-800">
+                            <tr>
+                                <th class="p-2">Time</th>
+                                <th class="p-2">Source</th>
+                                <th class="p-2">Action / Parameter</th>
+                                <th class="p-2">Before</th>
+                                <th class="p-2">After</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventLogBody" class="divide-y divide-slate-800/40">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let probsChart = null;
+        let trendChart = null;
+        const trendData = { labels: [], attackProbs: [], verdicts: [] };
+
+        // Initialize Charts
+        function initCharts() {
+            // Horizontal Probability Distribution
+            const ctxProbs = document.getElementById("probsChart").getContext("2d");
+            probsChart = new Chart(ctxProbs, {
+                type: "bar",
+                data: {
+                    labels: ["BENIGN", "SYN Flood", "UDP Flood", "Reflection DNS/NTP", "Slowloris", "Slowhttptest", "Hulk/GoldenEye"],
+                    datasets: [{
+                        label: "Probability",
+                        data: [1, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            "#10b981", "#ef4444", "#f97316", "#a855f7", "#eab308", "#f59e0b", "#ec4899"
+                        ],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { min: 0, max: 1.0, grid: { color: "#1e293b" }, ticks: { color: "#94a3b8" } },
+                        y: { grid: { display: false }, ticks: { color: "#e2e8f0", font: { size: 11, weight: "bold" } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 5-Minute Time-series Trend
+            const ctxTrend = document.getElementById("trendChart").getContext("2d");
+            trendChart = new Chart(ctxTrend, {
+                type: "line",
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: "Attack Probability",
+                        data: [],
+                        borderColor: "#ef4444",
+                        backgroundColor: "rgba(239, 68, 68, 0.15)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 1.0, grid: { color: "#1e293b" }, ticks: { color: "#94a3b8" } },
+                        x: { grid: { display: false }, ticks: { color: "#64748b", maxTicksLimit: 8 } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateDashboard(state) {
+            const v = state.verdict || {};
+            const live = state.live || {};
+            const mod = state.modified || {};
+            const overrides = state.overrides || {};
+            const explain = state.explain || [];
+            const boundary = state.boundary || {};
+            const consistency = state.consistency || {};
+            const status = state.status || {};
+            const events = state.event_log || [];
+
+            // 1. PC2 Connection Status Pill
+            const pc2Pill = document.getElementById("pc2StatusPill");
+            if (status.pc2_connected) {
+                pc2Pill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-700 text-xs font-bold text-emerald-300";
+                pc2Pill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span><span>PC2 Control: CONNECTED</span>';
+            } else {
+                pc2Pill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-400";
+                pc2Pill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span><span>PC2 Control: DISCONNECTED</span>';
+            }
+
+            // 2. Verdict Card
+            const vCard = document.getElementById("verdictCard");
+            const vTitle = document.getElementById("verdictTitle");
+            const vBadge = document.getElementById("verdictConfidenceBadge");
+            const vReason = document.getElementById("verdictReason");
+
+            const isAtt = v.is_attack;
+            const label = v.label || "BENIGN";
+            const confPercent = ((v.confidence || 0) * 100).toFixed(1);
+
+            vTitle.innerText = label;
+            vBadge.innerText = `${confPercent}% CONFIDENCE`;
+
+            if (isAtt) {
+                vCard.className = "glass-panel rounded-2xl p-6 border-2 border-red-500/60 relative overflow-hidden pulse-red";
+                vTitle.className = "text-4xl md:text-5xl font-black text-red-500 my-2 tracking-tight";
+                vBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40";
+                vReason.innerText = `CRITICAL ALERT: Network flow exhibits distinct signature of ${label}. Flow rates, flags, or durations deviate drastically from authentic camera baseline.`;
+            } else {
+                vCard.className = "glass-panel rounded-2xl p-6 border-2 border-emerald-500/40 relative overflow-hidden pulse-green";
+                vTitle.className = "text-4xl md:text-5xl font-black text-emerald-400 my-2 tracking-tight";
+                vBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                vReason.innerText = "Flow telemetry matches genuine live camera streaming characteristics. Packet intervals and flag ratios verified benign.";
+            }
+
+            // Consistency Warning
+            const warnBadge = document.getElementById("consistencyWarningBadge");
+            if (!consistency.realistic) {
+                warnBadge.classList.remove("hidden");
+                document.getElementById("consistencyWarningText").innerText = `Unrealistic combination: ${consistency.reason}`;
+            } else {
+                warnBadge.classList.add("hidden");
+            }
+
+            // 3. Decision Boundary Box
+            if (boundary && boundary.feature) {
+                document.getElementById("boundaryFeatureTitle").innerText = `Key Boundary Slider: ${boundary.feature} (${boundary.current_value} ${boundary.unit})`;
+                document.getElementById("boundaryDetails").innerText = boundary.explanation;
+            }
+
+            // 4. Update Probability Bar Chart
+            if (probsChart && v.probs) {
+                const labels = Object.keys(v.probs);
+                const dataVals = Object.values(v.probs);
+                probsChart.data.labels = labels;
+                probsChart.data.datasets[0].data = dataVals;
+                probsChart.update("none");
+            }
+
+            // 5. Update Time-Series Chart
+            if (trendChart) {
+                const nowStr = state.timestamp || new Date().toLocaleTimeString();
+                const attProb = isAtt ? (v.confidence || 0) : (1.0 - (v.confidence || 0));
+                trendData.labels.push(nowStr);
+                trendData.attackProbs.push(attProb);
+                if (trendData.labels.length > 30) {
+                    trendData.labels.shift();
+                    trendData.attackProbs.shift();
+                }
+                trendChart.data.labels = trendData.labels;
+                trendChart.data.datasets[0].data = trendData.attackProbs;
+                trendChart.update("none");
+            }
+
+            // 6. Update "Why This Verdict" Contribution Bars
+            const explainDiv = document.getElementById("explainContainer");
+            explainDiv.innerHTML = "";
+            explain.forEach(item => {
+                const row = document.createElement("div");
+                row.className = "space-y-1";
+                row.innerHTML = `
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-300 font-medium">${item.feature}</span>
+                        <span class="text-slate-400 font-mono">${item.value} ${item.unit} (<strong class="text-cyan-400">${item.contribution}%</strong>)</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-1.5 rounded-full" style="width: ${item.contribution}%"></div>
+                    </div>
+                `;
+                explainDiv.appendChild(row);
+            });
+
+            // 7. Side-by-Side Telemetry Table
+            const tbody = document.getElementById("telemetryTableBody");
+            tbody.innerHTML = "";
+            const allFeatNames = Object.keys(live);
+            allFeatNames.forEach(feat => {
+                const lVal = live[feat] !== undefined ? live[feat] : 0;
+                const mVal = mod[feat] !== undefined ? mod[feat] : lVal;
+                const isOverridden = overrides.hasOwnProperty(feat);
+
+                let delta = 0;
+                if (lVal > 0) delta = ((mVal - lVal) / lVal) * 100;
+                const deltaStr = isOverridden ? (delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`) : "0.0%";
+
+                const tr = document.createElement("tr");
+                tr.className = isOverridden ? "bg-amber-500/10 text-amber-200" : "hover:bg-slate-800/40";
+                tr.innerHTML = `
+                    <td class="p-2 font-medium ${isOverridden ? 'text-amber-300 font-bold' : 'text-slate-300'}">${feat}</td>
+                    <td class="p-2 text-slate-500 text-[11px]">${getUnit(feat)}</td>
+                    <td class="p-2 text-slate-400">${formatVal(lVal)}</td>
+                    <td class="p-2 font-bold ${isOverridden ? 'text-amber-400' : 'text-slate-300'}">${formatVal(mVal)}</td>
+                    <td class="p-2 ${isOverridden ? 'text-amber-400 font-bold' : 'text-slate-600'}">${deltaStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 8. Event Log Table
+            const ebody = document.getElementById("eventLogBody");
+            ebody.innerHTML = "";
+            events.slice(-15).reverse().forEach(ev => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="p-2 text-slate-500 font-mono">${ev.timestamp}</td>
+                    <td class="p-2 font-medium text-slate-300">${ev.source}</td>
+                    <td class="p-2 text-slate-400">${ev.action}</td>
+                    <td class="p-2 text-slate-400">${ev.verdict_before || '--'}</td>
+                    <td class="p-2 font-bold ${ev.verdict_after !== 'BENIGN' ? 'text-red-400' : 'text-emerald-400'}">${ev.verdict_after || '--'}</td>
+                `;
+                ebody.appendChild(tr);
+            });
+        }
+
+        function formatVal(v) {
+            if (typeof v === "number") {
+                return Number.isInteger(v) ? v : v.toFixed(2);
+            }
+            return v;
+        }
+
+        function getUnit(name) {
+            if (name.includes("Duration") || name.includes("IAT") || name.includes("Idle")) return "us";
+            if (name.includes("Bytes/s")) return "B/s";
+            if (name.includes("Packets/s")) return "pkts/s";
+            if (name.includes("Port")) return "port";
+            if (name.includes("Protocol")) return "proto";
+            return "cnt";
+        }
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const wsUrl = `${proto}//${window.location.host}/ws/dashboard`;
+            const ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log("[WS] Dashboard connected to PC1 backend");
+            };
+
+            ws.onmessage = (evt) => {
+                try {
+                    const data = JSON.parse(evt.data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error("Error parsing dashboard WS data:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log("[WS] Dashboard connection lost. Reconnecting in 2s...");
+                setTimeout(connectWebSocket, 2000);
+            };
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initCharts();
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>

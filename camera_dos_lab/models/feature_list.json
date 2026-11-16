@@ -1,0 +1,272 @@
+[
+  {
+    "name": "Flow Duration",
+    "group": "Timing",
+    "unit": "us",
+    "min": 10.0,
+    "max": 120000000.0,
+    "is_log": true,
+    "importance": 0.02167
+  },
+  {
+    "name": "Flow IAT Mean",
+    "group": "Timing",
+    "unit": "us",
+    "min": 1.0,
+    "max": 15000000.0,
+    "is_log": true,
+    "importance": 0.05242
+  },
+  {
+    "name": "Flow IAT Std",
+    "group": "Timing",
+    "unit": "us",
+    "min": 0.0,
+    "max": 8000000.0,
+    "is_log": true,
+    "importance": 0.06219
+  },
+  {
+    "name": "Flow IAT Max",
+    "group": "Timing",
+    "unit": "us",
+    "min": 10.0,
+    "max": 30000000.0,
+    "is_log": true,
+    "importance": 0.04478
+  },
+  {
+    "name": "Flow IAT Min",
+    "group": "Timing",
+    "unit": "us",
+    "min": 0.0,
+    "max": 5000000.0,
+    "is_log": true,
+    "importance": 0.04529
+  },
+  {
+    "name": "Fwd IAT Total",
+    "group": "Timing",
+    "unit": "us",
+    "min": 10.0,
+    "max": 120000000.0,
+    "is_log": true,
+    "importance": 0.02925
+  },
+  {
+    "name": "Idle Mean",
+    "group": "Timing",
+    "unit": "us",
+    "min": 0.0,
+    "max": 30000000.0,
+    "is_log": true,
+    "importance": 0.02843
+  },
+  {
+    "name": "Idle Max",
+    "group": "Timing",
+    "unit": "us",
+    "min": 0.0,
+    "max": 30000000.0,
+    "is_log": true,
+    "importance": 0.02148
+  },
+  {
+    "name": "Flow Bytes/s",
+    "group": "Rates",
+    "unit": "B/s",
+    "min": 0.1,
+    "max": 50000000.0,
+    "is_log": true,
+    "importance": 0.03985
+  },
+  {
+    "name": "Flow Packets/s",
+    "group": "Rates",
+    "unit": "pkts/s",
+    "min": 0.05,
+    "max": 50000.0,
+    "is_log": true,
+    "importance": 0.06898
+  },
+  {
+    "name": "Fwd Packets/s",
+    "group": "Rates",
+    "unit": "pkts/s",
+    "min": 0.02,
+    "max": 35000.0,
+    "is_log": true,
+    "importance": 0.04202
+  },
+  {
+    "name": "Bwd Packets/s",
+    "group": "Rates",
+    "unit": "pkts/s",
+    "min": 0.0,
+    "max": 35000.0,
+    "is_log": true,
+    "importance": 0.07168
+  },
+  {
+    "name": "Total Fwd Packets",
+    "group": "Packets and sizes",
+    "unit": "count",
+    "min": 1.0,
+    "max": 10000.0,
+    "is_log": true,
+    "importance": 0.05686
+  },
+  {
+    "name": "Total Backward Packets",
+    "group": "Packets and sizes",
+    "unit": "count",
+    "min": 0.0,
+    "max": 10000.0,
+    "is_log": true,
+    "importance": 0.04323
+  },
+  {
+    "name": "Fwd Packet Length Mean",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1500.0,
+    "is_log": false,
+    "importance": 0.05342
+  },
+  {
+    "name": "Fwd Packet Length Max",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1500.0,
+    "is_log": false,
+    "importance": 0.02993
+  },
+  {
+    "name": "Bwd Packet Length Mean",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1500.0,
+    "is_log": false,
+    "importance": 0.00392
+  },
+  {
+    "name": "Bwd Packet Length Max",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1500.0,
+    "is_log": false,
+    "importance": 0.01469
+  },
+  {
+    "name": "Packet Length Std",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1000.0,
+    "is_log": false,
+    "importance": 0.04298
+  },
+  {
+    "name": "Average Packet Size",
+    "group": "Packets and sizes",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 1500.0,
+    "is_log": false,
+    "importance": 0.02832
+  },
+  {
+    "name": "SYN Flag Count",
+    "group": "TCP flags",
+    "unit": "count",
+    "min": 0.0,
+    "max": 5000.0,
+    "is_log": false,
+    "importance": 0.02834
+  },
+  {
+    "name": "ACK Flag Count",
+    "group": "TCP flags",
+    "unit": "count",
+    "min": 0.0,
+    "max": 5000.0,
+    "is_log": false,
+    "importance": 0.04319
+  },
+  {
+    "name": "FIN Flag Count",
+    "group": "TCP flags",
+    "unit": "count",
+    "min": 0.0,
+    "max": 50.0,
+    "is_log": false,
+    "importance": 0.02867
+  },
+  {
+    "name": "RST Flag Count",
+    "group": "TCP flags",
+    "unit": "count",
+    "min": 0.0,
+    "max": 50.0,
+    "is_log": false,
+    "importance": 0.0
+  },
+  {
+    "name": "PSH Flag Count",
+    "group": "TCP flags",
+    "unit": "count",
+    "min": 0.0,
+    "max": 1000.0,
+    "is_log": false,
+    "importance": 0.03349
+  },
+  {
+    "name": "Init_Win_bytes_forward",
+    "group": "Window and header",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 65535.0,
+    "is_log": false,
+    "importance": 0.0132
+  },
+  {
+    "name": "Init_Win_bytes_backward",
+    "group": "Window and header",
+    "unit": "bytes",
+    "min": 0.0,
+    "max": 65535.0,
+    "is_log": false,
+    "importance": 0.00819
+  },
+  {
+    "name": "Fwd Header Length",
+    "group": "Window and header",
+    "unit": "bytes",
+    "min": 8.0,
+    "max": 60.0,
+    "is_log": false,
+    "importance": 0.00998
+  },
+  {
+    "name": "Destination Port",
+    "group": "Port and protocol",
+    "unit": "port",
+    "min": 0.0,
+    "max": 65535.0,
+    "is_log": false,
+    "importance": 0.02656
+  },
+  {
+    "name": "Protocol",
+    "group": "Port and protocol",
+    "unit": "proto",
+    "min": 6.0,
+    "max": 17.0,
+    "is_log": false,
+    "importance": 0.00697
+  }
+]

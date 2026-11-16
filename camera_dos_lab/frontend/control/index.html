@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC2 | Camera-DoS Attack & Feature Control Panel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #080c14; color: #cbd5e1; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            border: 2px solid #0f172a;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            border: 2px solid #0f172a;
+        }
+        .tab-btn.active {
+            background-color: #1e293b;
+            color: #38bdf8;
+            border-color: #38bdf8;
+        }
+        .pulse-subtle { animation: pulseSubtle 2s infinite; }
+        @keyframes pulseSubtle {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4)); }
+            100% { opacity: 0.9; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-6">
+
+    <!-- Header Navigation -->
+    <header class="glass-panel rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+            <span class="p-2.5 rounded-lg bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-xl">
+                <i class="fa-solid fa-sliders"></i>
+            </span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-white tracking-wide flex items-center gap-2">
+                    FEATURE CONTROL CONSOLE <span class="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">PC2 CLIENT</span>
+                </h1>
+                <p class="text-xs text-slate-400">Live Network Flow Manipulation &amp; Attack Injection Simulator</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Connection Status -->
+            <div id="connStatusPill" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                <span>Connecting to PC1...</span>
+            </div>
+
+            <!-- Mirrored Verdict Badge -->
+            <div id="mirroredVerdict" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-extrabold text-emerald-400">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span id="verdictLabelText">BENIGN (100%)</span>
+            </div>
+
+            <!-- Latency -->
+            <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
+                RTT: <span id="rttText" class="font-bold text-cyan-400">-- ms</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Top Attack Preset Quick-Action Bar -->
+    <section class="glass-panel rounded-xl p-4 mb-6 border border-slate-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
+                <i class="fa-solid fa-bolt text-amber-400"></i> One-Click Attack Family Presets
+                <span class="text-[10px] text-slate-500 font-normal lowercase">(derived from median training values)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="injectVideoAttack()" class="px-3.5 py-1.5 text-xs font-extrabold rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40 transition flex items-center gap-1.5 animate-pulse">
+                    <i class="fa-solid fa-video text-white"></i> 🚨 Inject Video (Loop / Replay Attack)
+                </button>
+                <button id="btnResetAll" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left text-cyan-400"></i> Reset All to Live
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+            <button onclick="applyPreset('syn_flood')" class="preset-btn px-3 py-2.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-fire text-rose-400"></i>
+                <span>SYN Flood</span>
+            </button>
+            <button onclick="applyPreset('udp_flood')" class="preset-btn px-3 py-2.5 rounded-lg bg-orange-950/40 hover:bg-orange-900/60 border border-orange-800/60 text-orange-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-water text-orange-400"></i>
+                <span>UDP Flood</span>
+            </button>
+            <button onclick="applyPreset('reflection')" class="preset-btn px-3 py-2.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/60 text-amber-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-arrows-split-up-and-left text-amber-400"></i>
+                <span>Reflection DNS/NTP</span>
+            </button>
+            <button onclick="applyPreset('slowloris')" class="preset-btn px-3 py-2.5 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 text-purple-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-hourglass-half text-purple-400"></i>
+                <span>Slowloris</span>
+            </button>
+            <button onclick="applyPreset('slowhttptest')" class="preset-btn px-3 py-2.5 rounded-lg bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-800/60 text-indigo-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-hand-holding-hand text-indigo-400"></i>
+                <span>Slowhttptest</span>
+            </button>
+            <button onclick="applyPreset('hulk_goldeneye')" class="preset-btn px-3 py-2.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-300 font-semibold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-skull-crossbones text-red-400"></i>
+                <span>Hulk / GoldenEye</span>
+            </button>
+            <button onclick="applyPreset('benign')" class="preset-btn px-3 py-2.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/60 text-emerald-300 font-bold text-xs flex flex-col items-center gap-1 transition">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span>Back to Benign</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- FAKE VIDEO UPLOAD & REPLAY INJECTION CONSOLE -->
+    <section class="glass-panel rounded-xl p-4 mb-6 border border-rose-900/40 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-rose-950/20 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-300">
+                <i class="fa-solid fa-video text-rose-400"></i> Fake Video Injection & Pi Edge Evidence Recording
+                <span class="text-[10px] text-slate-400 font-normal lowercase">(Autonomous Pi camera background recording & evidence recovery)</span>
+            </div>
+            <div id="piEdgeStatusBadge" class="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-600/50 text-[11px] font-bold text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="piEdgeStatusText">Pi Camera Edge Node: STANDBY (ARMED)</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            <!-- 1. Upload custom fake video -->
+            <div class="md:col-span-5 flex items-center gap-2">
+                <input type="file" id="fakeVideoFileInput" accept=".mp4" class="block w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700 cursor-pointer">
+                <button onclick="uploadFakeVideoFile()" id="btnUploadFakeVideo" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-cyan-900/70 hover:bg-cyan-800 border border-cyan-600 text-xs font-bold text-cyan-200 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> Upload .mp4
+                </button>
+            </div>
+
+            <!-- 2. Select fake video from dropdown -->
+            <div class="md:col-span-4 flex items-center gap-2">
+                <span class="text-xs text-slate-400 whitespace-nowrap font-medium">Select Video:</span>
+                <select id="selectFakeVideo" class="w-full py-1.5 px-3 rounded-lg bg-slate-900 border border-slate-700 text-xs text-amber-300 font-mono focus:outline-none focus:border-rose-500">
+                    <option value="empty_atm_loop.mp4">empty_atm_loop.mp4 (Default Empty Loop)</option>
+                    <option value="peaceful_corridor.mp4">peaceful_corridor.mp4 (Corridor Cam)</option>
+                </select>
+            </div>
+
+            <!-- 3. Inject Button -->
+            <div class="md:col-span-3 flex items-center gap-2">
+                <button onclick="injectChosenFakeVideo()" class="w-full py-2 px-3 text-xs font-extrabold rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/50 transition flex items-center justify-center gap-1.5 animate-pulse">
+                    <i class="fa-solid fa-play"></i> Inject Fake Video
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Alert / Status banner -->
+        <div id="uploadFeedbackAlert" class="hidden mt-3 p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs">
+        </div>
+    </section>
+
+    <!-- Global Control Bar -->
+    <section class="glass-panel rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border border-slate-800">
+        <!-- Toggles: Freeze Live Feed & Link Derived Features -->
+        <div class="flex items-center gap-4 flex-wrap">
+            <button id="btnFreeze" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-2 transition">
+                <i class="fa-regular fa-snowflake text-cyan-400"></i>
+                <span>Freeze Live Feed: <span id="freezeStatusText" class="text-rose-400 font-bold">OFF</span></span>
+            </button>
+
+            <button id="btnLinkDerived" class="px-3.5 py-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-900/40 border border-cyan-800/60 text-xs font-semibold text-cyan-300 flex items-center gap-2 transition">
+                <i class="fa-solid fa-link text-cyan-400"></i>
+                <span>Link Derived Features: <span id="linkStatusText" class="text-emerald-400 font-bold">ON</span></span>
+            </button>
+
+            <label class="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer select-none">
+                <input type="checkbox" id="chkImportantOnly" class="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0">
+                <span>Show Important Features Only</span>
+            </label>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <input type="text" id="featureSearchInput" placeholder="Search feature name..." 
+                   class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+        </div>
+    </section>
+
+    <!-- Physical Consistency Warning Banner -->
+    <div id="unrealisticBanner" class="hidden mb-6 p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base"></i>
+        <div>
+            <span class="font-bold uppercase tracking-wider">Unrealistic Feature Combination Detected:</span>
+            <span id="unrealisticText" class="font-normal text-amber-200 ml-1">Flow Packets/s conflicts with Duration and Packet counts.</span>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-4 border-b border-slate-800" id="tabsHeader">
+        <!-- Dynamically generated or static tab buttons -->
+        <button onclick="switchTab('All')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 active transition" data-group="All">
+            All Features (<span id="count-All">29</span>)
+        </button>
+        <button onclick="switchTab('Timing')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="Timing">
+            <i class="fa-regular fa-clock mr-1"></i> Timing (<span id="count-Timing">8</span>)
+        </button>
+        <button onclick="switchTab('Rates')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="Rates">
+            <i class="fa-solid fa-chart-line mr-1"></i> Rates (<span id="count-Rates">4</span>)
+        </button>
+        <button onclick="switchTab('Packets and sizes')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="Packets and sizes">
+            <i class="fa-solid fa-box mr-1"></i> Packets &amp; Sizes (<span id="count-Packets and sizes">8</span>)
+        </button>
+        <button onclick="switchTab('TCP flags')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="TCP flags">
+            <i class="fa-solid fa-flag mr-1"></i> TCP Flags (<span id="count-TCP flags">5</span>)
+        </button>
+        <button onclick="switchTab('Window and header')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="Window and header">
+            <i class="fa-solid fa-window-maximize mr-1"></i> Window &amp; Header (<span id="count-Window and header">3</span>)
+        </button>
+        <button onclick="switchTab('Port and protocol')" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold border border-slate-800 text-slate-400 hover:text-slate-200 transition" data-group="Port and protocol">
+            <i class="fa-solid fa-network-wired mr-1"></i> Port &amp; Protocol (<span id="count-Port and protocol">2</span>)
+        </button>
+    </div>
+
+    <!-- Sliders Container Grid -->
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-grow mb-6" id="slidersContainer">
+        <!-- Slider cards rendered dynamically -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto pt-4 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-wrap justify-between items-center gap-2">
+        <span>Camera-DoS Intrusion Detection Testbed &bull; PC2 Control Station</span>
+        <span>Safety Scope: Feature Value Simulation Only (RFC 2544 Compliant)</span>
+    </footer>
+
+    <!-- App JavaScript Logic -->
+    <script>
+        // State variables
+        let features = [];
+        let liveValues = {};
+        let modifiedValues = {};
+        let activeOverrides = {};
+        let currentTab = "All";
+        let isFrozen = false;
+        let linkDerived = true;
+        let ws = null;
+        let pingStartTime = 0;
+        let debounceTimers = {};
+
+        // Fetch feature metadata on load
+        async function init() {
+            try {
+                const res = await fetch('/api/features');
+                features = await res.json();
+                renderSliders();
+                loadAvailableFakeVideos();
+                connectWebSocket();
+            } catch (err) {
+                console.error("Failed to load feature schema:", err);
+            }
+        }
+
+        // Connect to WebSocket /ws/control
+        function connectWebSocket() {
+            const host = window.location.host;
+            const wsUrl = `ws://${host}/ws/control`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                const pill = document.getElementById('connStatusPill');
+                pill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-600/40 text-xs font-bold text-emerald-400";
+                pill.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span><span>PC1 Connected</span>`;
+                console.log("[WS] Connected to PC1 control socket");
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (pingStartTime) {
+                    const rtt = Date.now() - pingStartTime;
+                    document.getElementById('rttText').innerText = `${rtt} ms`;
+                    pingStartTime = 0;
+                }
+                handleStateUpdate(data);
+            };
+
+            ws.onclose = () => {
+                const pill = document.getElementById('connStatusPill');
+                pill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-600/40 text-xs font-bold text-rose-400";
+                pill.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span><span>PC1 Reconnecting...</span>`;
+                setTimeout(connectWebSocket, 1500);
+            };
+        }
+
+        function handleStateUpdate(state) {
+            liveValues = state.live || {};
+            modifiedValues = state.modified || {};
+            activeOverrides = state.overrides || {};
+
+            // Update Verdict Badge
+            const verdict = state.verdict || {};
+            const isAttack = (verdict.label !== "BENIGN");
+            const verdictPill = document.getElementById('mirroredVerdict');
+            const labelText = document.getElementById('verdictLabelText');
+            
+            labelText.innerText = `${verdict.label || 'UNKNOWN'} (${verdict.confidence || 0}%)`;
+            if (isAttack) {
+                verdictPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/40 text-xs font-extrabold text-rose-400 animate-pulse";
+            } else {
+                verdictPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-extrabold text-emerald-400";
+            }
+
+            // Consistency Warning
+            const consistency = state.consistency || {};
+            const unBanner = document.getElementById('unrealisticBanner');
+            const unText = document.getElementById('unrealisticText');
+            if (consistency.realistic === false) {
+                unBanner.classList.remove('hidden');
+                unText.innerText = consistency.reason || "Physical bounds violated";
+            } else {
+                unBanner.classList.add('hidden');
+            }
+
+            // Sync Status toggles
+            if (state.status) {
+                isFrozen = state.status.frozen;
+                linkDerived = state.status.link_derived;
+                document.getElementById('freezeStatusText').innerText = isFrozen ? "ON" : "OFF";
+                document.getElementById('freezeStatusText').className = isFrozen ? "text-cyan-400 font-bold" : "text-rose-400 font-bold";
+                document.getElementById('linkStatusText').innerText = linkDerived ? "ON" : "OFF";
+                document.getElementById('linkStatusText').className = linkDerived ? "text-emerald-400 font-bold" : "text-amber-400 font-bold";
+            }
+
+            // Update DOM slider values
+            updateAllSlidersDom();
+        }
+
+        function renderSliders() {
+            const container = document.getElementById('slidersContainer');
+            container.innerHTML = "";
+
+            features.forEach(f => {
+                const card = document.createElement('div');
+                card.id = `card-${escapeId(f.name)}`;
+                card.className = "slider-card glass-panel rounded-xl p-4 border border-slate-800 flex flex-col justify-between transition hover:border-slate-700";
+                card.setAttribute('data-name', f.name.toLowerCase());
+                card.setAttribute('data-group', f.group);
+                card.setAttribute('data-important', f.importance > 0.04 ? "true" : "false");
+
+                // Check if Port or Protocol special selectors
+                let controlWidget = "";
+                if (f.name === "Destination Port") {
+                    controlWidget = `
+                        <div class="flex items-center gap-2 my-2">
+                            <select id="select-${escapeId(f.name)}" onchange="onPortSelectChange(this.value)" class="w-full py-1.5 px-3 rounded-lg bg-slate-900 border border-slate-700 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500">
+                                <option value="80">80 (HTTP Video Feed)</option>
+                                <option value="443">443 (HTTPS Secure)</option>
+                                <option value="53">53 (DNS Query)</option>
+                                <option value="123">123 (NTP Time Sync)</option>
+                                <option value="8081">8081 (RTSP Camera Stream)</option>
+                                <option value="custom">Custom Port...</option>
+                            </select>
+                        </div>
+                        <input type="range" id="slider-${escapeId(f.name)}" 
+                               min="${f.min}" max="${f.max}" step="1"
+                               class="w-full slider-thumb h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer mt-1"
+                               oninput="onSliderInput('${f.name}', this.value, ${f.is_log})">
+                    `;
+                } else if (f.name === "Protocol") {
+                    controlWidget = `
+                        <div class="grid grid-cols-2 gap-2 my-2">
+                            <button type="button" onclick="setOverride('Protocol', 6)" id="proto-6-btn" class="py-1 px-2 text-xs font-bold rounded bg-slate-800 border border-slate-700 text-slate-300 hover:border-cyan-500">TCP (6)</button>
+                            <button type="button" onclick="setOverride('Protocol', 17)" id="proto-17-btn" class="py-1 px-2 text-xs font-bold rounded bg-slate-800 border border-slate-700 text-slate-300 hover:border-cyan-500">UDP (17)</button>
+                        </div>
+                    `;
+                } else {
+                    const step = f.is_log ? 0.01 : (f.max > 100 ? 1 : 0.01);
+                    controlWidget = `
+                        <div class="my-3">
+                            <input type="range" id="slider-${escapeId(f.name)}" 
+                                   min="0" max="100" step="0.5"
+                                   class="w-full slider-thumb h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                   oninput="onSliderInput('${f.name}', this.value, ${f.is_log})">
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <div>
+                                <span class="font-bold text-slate-100 text-sm tracking-wide">${f.name}</span>
+                                <span class="text-[10px] ml-1.5 px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">${f.unit}</span>
+                            </div>
+                            <button onclick="resetSingle('${f.name}')" title="Reset this feature to live" class="text-xs text-slate-500 hover:text-cyan-400 transition">
+                                <i class="fa-solid fa-arrow-rotate-left"></i>
+                            </button>
+                        </div>
+
+                        <!-- Value Badges -->
+                        <div class="flex items-center justify-between mt-2 text-xs font-mono">
+                            <div class="text-slate-400">
+                                Live: <span id="live-${escapeId(f.name)}" class="text-slate-300">--</span>
+                            </div>
+                            <div class="text-cyan-400 font-bold">
+                                Mod: <span id="mod-${escapeId(f.name)}">--</span>
+                            </div>
+                            <div id="delta-${escapeId(f.name)}" class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-800 text-slate-400">
+                                0%
+                            </div>
+                        </div>
+
+                        ${controlWidget}
+                    </div>
+
+                    <div class="flex justify-between items-center text-[10px] text-slate-500 mt-1 font-mono">
+                        <span>Min: ${formatVal(f.min, f.unit)}</span>
+                        ${f.importance > 0.04 ? '<span class="text-amber-400/80 font-bold"><i class="fa-solid fa-star text-[9px]"></i> High Impact</span>' : ''}
+                        <span>Max: ${formatVal(f.max, f.unit)}</span>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            applyTabAndFilters();
+        }
+
+        function escapeId(name) {
+            return name.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+
+        function formatVal(val, unit) {
+            if (val === undefined || val === null || isNaN(val)) return "--";
+            if (val >= 1000000) return (val / 1000000).toFixed(1) + "M";
+            if (val >= 1000) return (val / 1000).toFixed(1) + "k";
+            if (Number.isInteger(val)) return val.toString();
+            return Number(val).toFixed(2);
+        }
+
+        // Value to Slider Percent (handles log scale)
+        function valToPercent(val, min, max, isLog) {
+            if (isLog) {
+                const logMin = Math.log10(Math.max(min, 0.001));
+                const logMax = Math.log10(Math.max(max, 1));
+                const logVal = Math.log10(Math.max(val, 0.001));
+                return Math.min(100, Math.max(0, ((logVal - logMin) / (logMax - logMin)) * 100));
+            } else {
+                return Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100));
+            }
+        }
+
+        // Slider Percent to Value
+        function percentToVal(pct, min, max, isLog) {
+            if (isLog) {
+                const logMin = Math.log10(Math.max(min, 0.001));
+                const logMax = Math.log10(Math.max(max, 1));
+                const logVal = logMin + (pct / 100) * (logMax - logMin);
+                return Math.pow(10, logVal);
+            } else {
+                return min + (pct / 100) * (max - min);
+            }
+        }
+
+        function updateAllSlidersDom() {
+            features.forEach(f => {
+                const eid = escapeId(f.name);
+                const live = liveValues[f.name];
+                const mod = (modifiedValues[f.name] !== undefined) ? modifiedValues[f.name] : live;
+
+                const liveEl = document.getElementById(`live-${eid}`);
+                const modEl = document.getElementById(`mod-${eid}`);
+                const deltaEl = document.getElementById(`delta-${eid}`);
+                const sliderEl = document.getElementById(`slider-${eid}`);
+
+                if (liveEl) liveEl.innerText = formatVal(live, f.unit);
+                if (modEl) modEl.innerText = formatVal(mod, f.unit);
+
+                // Compute Delta
+                if (deltaEl && live !== undefined && mod !== undefined) {
+                    if (live === 0) {
+                        deltaEl.innerText = mod > 0 ? "+inf" : "0%";
+                    } else {
+                        const pct = ((mod - live) / Math.abs(live)) * 100;
+                        if (Math.abs(pct) < 0.1) {
+                            deltaEl.innerText = "0%";
+                            deltaEl.className = "px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-800 text-slate-400";
+                        } else if (pct > 0) {
+                            deltaEl.innerText = `+${pct.toFixed(0)}%`;
+                            deltaEl.className = "px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                        } else {
+                            deltaEl.innerText = `${pct.toFixed(0)}%`;
+                            deltaEl.className = "px-1.5 py-0.2 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30";
+                        }
+                    }
+                }
+
+                // Update slider position if not actively dragging
+                if (sliderEl && !sliderEl.matches(':active')) {
+                    if (f.name === "Destination Port") {
+                        sliderEl.value = mod;
+                        const sel = document.getElementById(`select-${eid}`);
+                        if (sel) {
+                            const standardPorts = ["80", "443", "53", "123", "8081"];
+                            sel.value = standardPorts.includes(String(Math.round(mod))) ? String(Math.round(mod)) : "custom";
+                        }
+                    } else if (f.name !== "Protocol") {
+                        sliderEl.value = valToPercent(mod, f.min, f.max, f.is_log);
+                    }
+                }
+
+                // Update Protocol button styles
+                if (f.name === "Protocol") {
+                    const p6 = document.getElementById('proto-6-btn');
+                    const p17 = document.getElementById('proto-17-btn');
+                    if (p6 && p17) {
+                        const currProto = Math.round(mod);
+                        if (currProto === 17) {
+                            p17.className = "py-1 px-2 text-xs font-bold rounded bg-cyan-600 text-white border border-cyan-400";
+                            p6.className = "py-1 px-2 text-xs font-bold rounded bg-slate-800 border border-slate-700 text-slate-400";
+                        } else {
+                            p6.className = "py-1 px-2 text-xs font-bold rounded bg-cyan-600 text-white border border-cyan-400";
+                            p17.className = "py-1 px-2 text-xs font-bold rounded bg-slate-800 border border-slate-700 text-slate-400";
+                        }
+                    }
+                }
+            });
+        }
+
+        // Debounced slider handler (~100ms)
+        function onSliderInput(name, sliderValue, isLog) {
+            const f = features.find(x => x.name === name);
+            if (!f) return;
+
+            let realVal;
+            if (name === "Destination Port") {
+                realVal = parseInt(sliderValue, 10);
+            } else {
+                realVal = percentToVal(parseFloat(sliderValue), f.min, f.max, isLog);
+                if (Number.isInteger(f.min) && Number.isInteger(f.max) && f.max > 100) {
+                    realVal = Math.round(realVal);
+                }
+            }
+
+            // Immediately update visual display for responsiveness
+            const eid = escapeId(name);
+            const modEl = document.getElementById(`mod-${eid}`);
+            if (modEl) modEl.innerText = formatVal(realVal, f.unit);
+
+            // Debounce send over WebSocket
+            if (debounceTimers[name]) clearTimeout(debounceTimers[name]);
+            debounceTimers[name] = setTimeout(() => {
+                setOverride(name, realVal);
+            }, 90);
+        }
+
+        function onPortSelectChange(val) {
+            if (val !== "custom") {
+                setOverride("Destination Port", parseInt(val, 10));
+            }
+        }
+
+        function setOverride(name, value) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            pingStartTime = Date.now();
+            ws.send(JSON.stringify({
+                type: "override",
+                values: { [name]: value }
+            }));
+        }
+
+        function injectVideoAttack() {
+            injectChosenFakeVideo();
+        }
+
+        async function loadAvailableFakeVideos() {
+            try {
+                const res = await fetch('/api/fake_videos');
+                const data = await res.json();
+                if (data.ok && data.videos) {
+                    const sel = document.getElementById('selectFakeVideo');
+                    if (!sel) return;
+                    sel.innerHTML = "";
+                    data.videos.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v;
+                        opt.innerText = v;
+                        if (v === "empty_atm_loop.mp4") opt.selected = true;
+                        sel.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load fake videos:", err);
+            }
+        }
+
+        async function uploadFakeVideoFile() {
+            const input = document.getElementById('fakeVideoFileInput');
+            const feedback = document.getElementById('uploadFeedbackAlert');
+            if (!input || !input.files || input.files.length === 0) {
+                alert("Please select an .mp4 video file first.");
+                return;
+            }
+
+            const file = input.files[0];
+            const btn = document.getElementById('btnUploadFakeVideo');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-cyan-400"></i> Uploading...';
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload_fake_video', {
+                    method: 'POST',
+                    body: formData
+                });
+                const d = await res.json();
+                if (d.ok) {
+                    feedback.className = "mt-3 p-2.5 rounded-lg bg-cyan-950/80 border border-cyan-600 text-xs text-cyan-200 block";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check text-cyan-400 mr-1.5"></i> Fake video <strong>${d.filename}</strong> uploaded successfully and ready for injection!`;
+                    await loadAvailableFakeVideos();
+                    const sel = document.getElementById('selectFakeVideo');
+                    if (sel) sel.value = d.filename;
+                } else {
+                    alert("Upload error: " + (d.error || "Failed to upload"));
+                }
+            } catch (err) {
+                alert("Upload failed: " + err);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> Upload .mp4';
+                btn.disabled = false;
+            }
+        }
+
+        function injectChosenFakeVideo() {
+            const sel = document.getElementById('selectFakeVideo');
+            const chosen = sel ? sel.value : "empty_atm_loop.mp4";
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            pingStartTime = Date.now();
+            ws.send(JSON.stringify({
+                type: "inject_video",
+                mp4_file: chosen
+            }));
+
+            const badge = document.getElementById('piEdgeStatusBadge');
+            const txt = document.getElementById('piEdgeStatusText');
+            if (badge && txt) {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-lg bg-rose-950/80 border border-rose-600 text-[11px] font-bold text-rose-300 animate-pulse";
+                txt.innerText = `Pi Camera Edge Node: 🚨 RECORDING GENUINE SCENE (EVIDENCE PROTECTED)`;
+            }
+
+            const feedback = document.getElementById('uploadFeedbackAlert');
+            if (feedback) {
+                feedback.className = "mt-3 p-2.5 rounded-lg bg-rose-950/80 border border-rose-600 text-xs text-rose-200 block";
+                feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i> Injected fake video <strong>'${chosen}'</strong> into PC1 live stream! Raspberry Pi camera node is now autonomously recording the real physical scene on-device.`;
+            }
+        }
+
+        function applyPreset(presetName) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            pingStartTime = Date.now();
+            ws.send(JSON.stringify({
+                type: "preset",
+                name: presetName
+            }));
+
+            const badge = document.getElementById('piEdgeStatusBadge');
+            const txt = document.getElementById('piEdgeStatusText');
+            if (presetName === 'benign') {
+                if (badge && txt) {
+                    badge.className = "flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-600/50 text-[11px] font-bold text-emerald-400";
+                    txt.innerText = "Pi Edge Node: ✅ EVIDENCE SYNCED TO PC1 & DELETED ON PI";
+                }
+            } else {
+                if (badge && txt) {
+                    badge.className = "flex items-center gap-2 px-3 py-1 rounded-lg bg-rose-950/80 border border-rose-600 text-[11px] font-bold text-rose-300 animate-pulse";
+                    txt.innerText = `Pi Camera Edge Node: 🚨 RECORDING GENUINE SCENE ON ${presetName.toUpperCase()}`;
+                }
+            }
+        }
+
+        function resetSingle(name) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            pingStartTime = Date.now();
+            ws.send(JSON.stringify({
+                type: "reset_single",
+                feature: name
+            }));
+        }
+
+        // Global Action Buttons
+        document.getElementById('btnResetAll').addEventListener('click', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            pingStartTime = Date.now();
+            ws.send(JSON.stringify({ type: "reset" }));
+
+            const badge = document.getElementById('piEdgeStatusBadge');
+            const txt = document.getElementById('piEdgeStatusText');
+            if (badge && txt) {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-600/50 text-[11px] font-bold text-emerald-400";
+                txt.innerText = "Pi Edge Node: ✅ EVIDENCE SYNCED TO PC1 & DELETED ON PI";
+            }
+            const feedback = document.getElementById('uploadFeedbackAlert');
+            if (feedback) {
+                feedback.className = "mt-3 p-2.5 rounded-lg bg-emerald-950/80 border border-emerald-600 text-xs text-emerald-200 block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Attack stopped & reset! Genuine physical video recorded on the Raspberry Pi node has been synced to PC1 and deleted from Pi storage to conserve local memory.`;
+            }
+        });
+
+        document.getElementById('btnFreeze').addEventListener('click', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            isFrozen = !isFrozen;
+            ws.send(JSON.stringify({ type: "freeze", value: isFrozen }));
+        });
+
+        document.getElementById('btnLinkDerived').addEventListener('click', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            linkDerived = !linkDerived;
+            ws.send(JSON.stringify({ type: "toggle_link", value: linkDerived }));
+        });
+
+        // Tab and Filter Navigation
+        function switchTab(groupName) {
+            currentTab = groupName;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-group') === groupName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            applyTabAndFilters();
+        }
+
+        document.getElementById('featureSearchInput').addEventListener('input', applyTabAndFilters);
+        document.getElementById('chkImportantOnly').addEventListener('change', applyTabAndFilters);
+
+        function applyTabAndFilters() {
+            const query = document.getElementById('featureSearchInput').value.toLowerCase().trim();
+            const importantOnly = document.getElementById('chkImportantOnly').checked;
+
+            document.querySelectorAll('.slider-card').forEach(card => {
+                const name = card.getAttribute('data-name');
+                const group = card.getAttribute('data-group');
+                const isImportant = (card.getAttribute('data-important') === "true");
+
+                const matchesTab = (currentTab === "All" || group === currentTab);
+                const matchesSearch = (!query || name.includes(query));
+                const matchesImportant = (!importantOnly || isImportant);
+
+                if (matchesTab && matchesSearch && matchesImportant) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Start initialization
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
