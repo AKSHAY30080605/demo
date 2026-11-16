@@ -1,0 +1,16 @@
+Label,Sample Count,Percentage (%),Imbalance Ratio (1:N)
+BENIGN,28066,80.1886,1.0
+DoS Hulk,2841,8.1171,9.9
+PortScan,1958,5.5943,14.3
+DDoS,1597,4.5629,17.6
+DoS GoldenEye,127,0.3629,221.0
+FTP-Patator,96,0.2743,292.4
+DoS Slowhttptest,78,0.2229,359.8
+SSH-Patator,77,0.22,364.5
+DoS slowloris,62,0.1771,452.7
+Bot,32,0.0914,877.1
+Infiltration,20,0.0571,1403.3
+Web Attack - SQL Injection,14,0.04,2004.7
+Web Attack - Brute Force,13,0.0371,2158.9
+Heartbleed,11,0.0314,2551.5
+Web Attack - XSS,8,0.0229,3508.2

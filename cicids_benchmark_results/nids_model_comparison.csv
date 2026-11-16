@@ -1,0 +1,4 @@
+Model Family,Macro-F1,Weighted-F1,Stage 1 ROC-AUC,Stage 1 PR-AUC,Training Time (s),"Inference / 1,000 Flows"
+xgboost,0.4986,0.9359,1.0000,0.9998,6.24s,2.92 ms
+random_forest,0.5324,0.9351,0.9999,0.9995,1.06s,20.73 ms
+neural_network,0.4556,0.9302,0.9999,0.9998,4.56s,2.85 ms
