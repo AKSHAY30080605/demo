@@ -1,0 +1,29 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+cowrie-env/
+**/cowrie-env/
+
+# Large recorded incident video files (exceeding GitHub limits)
+atm_trustfusion_ai/incident_footage/*.mp4
+atm_trustfusion_ai/incident_footage/archived/*.mp4
+atm_trustfusion_ai/static/recovered_footage.mp4
+atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/*.mp4
+!atm_trustfusion_ai/redteam_lab/attack_console/injection_videos/empty_atm_loop.mp4
+
+# Nested Git repositories
+camera_sentinel/cowrie/.git/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
